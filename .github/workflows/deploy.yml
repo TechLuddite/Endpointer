@@ -40,6 +40,9 @@ jobs:
       - name: Build static assets
         run: npm run build:gh-pages
         env:
+          # base_url is the full site URL and is correct for custom domains,
+          # user pages and project pages alike. base_path is kept as a fallback.
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
       - name: Upload artifact
