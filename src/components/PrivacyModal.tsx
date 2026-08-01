@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ShieldCheck, Lock, Database, EyeOff, Server, CheckCircle2 } from 'lucide-react';
+import { X, ShieldCheck, Lock, Database, EyeOff, Server, CheckCircle2, Sparkles, AlertTriangle } from 'lucide-react';
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl shadow-emerald-950/30 flex flex-col font-mono text-slate-200">
+      <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl shadow-emerald-950/30 flex flex-col font-mono text-slate-200">
         {/* Header */}
         <div className="px-6 py-4 bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 border-b border-emerald-500/20 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -22,7 +22,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <h3 className="font-bold text-base text-white tracking-wide">
                 Privacy & Data Security Policy
               </h3>
-              <p className="text-xs text-emerald-300">How Endpointer protects developer privacy</p>
+              <p className="text-xs text-emerald-300">How Endpointer protects developer privacy & AI safety</p>
             </div>
           </div>
 
@@ -58,7 +58,42 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
             </p>
           </div>
 
-          {/* Card 3: Zero Telemetry */}
+          {/* Card 3: AI Copilot & LLM API Privacy */}
+          <div className="p-4 rounded-xl bg-slate-950 border border-indigo-500/40 space-y-3 bg-gradient-to-b from-indigo-950/20 to-slate-950">
+            <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span>AI Copilot & LLM API Privacy Statement</span>
+            </div>
+            <p className="text-slate-300 leading-relaxed">
+              When using the <strong className="text-indigo-300">AI API Copilot</strong> or <strong className="text-indigo-300">AI Schema Assistant</strong>, prompt text and active request contexts (such as target URLs, query parameters, or response payloads) are processed via server-side Large Language Model (LLM) APIs (<code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded border border-slate-800">Google Gemini API</code>).
+            </p>
+
+            <ul className="space-y-1.5 pl-2 text-slate-400 list-disc list-inside text-[11px]">
+              <li><strong className="text-slate-200">Stateless Processing:</strong> Endpointer servers do not log or store prompt messages or generated AI responses.</li>
+              <li><strong className="text-slate-200">Client-Side Fallback:</strong> If backend LLM services are unreachable, analysis logic executes locally inside your browser without external transmission.</li>
+            </ul>
+
+            {/* Warning Box regarding Common LLM Concerns */}
+            <div className="p-3.5 rounded-lg bg-amber-950/30 border border-amber-500/30 space-y-2 text-amber-200 text-[11px]">
+              <div className="flex items-center gap-1.5 font-bold text-amber-400">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>Common Concerns & Important AI Safety Warnings</span>
+              </div>
+              <ul className="space-y-2 pl-1 list-disc list-inside text-amber-200/90 leading-normal">
+                <li>
+                  <strong className="text-amber-300">Sensitive Data Warning:</strong> Never send production credentials, secrets, private bearer tokens, passwords, or sensitive PII (Personally Identifiable Information) in AI prompts or payload contexts. Always sanitize request bodies before requesting AI analysis.
+                </li>
+                <li>
+                  <strong className="text-amber-300">Third-Party LLM Processing:</strong> Prompts sent to the AI Copilot are processed by external foundation model providers (Google Gemini) according to their API data privacy policies.
+                </li>
+                <li>
+                  <strong className="text-amber-300">Hallucinations & Verification:</strong> AI-generated request parameters, headers, mock JSON payloads, and TypeScript types are probabilistically constructed. Always review and test AI suggestions before deploying or executing them against sensitive databases or live production systems.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Card 4: Zero Telemetry */}
           <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
             <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
               <EyeOff className="w-4 h-4 text-purple-400" />
@@ -69,7 +104,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
             </p>
           </div>
 
-          {/* Card 4: API Keys */}
+          {/* Card 5: API Keys */}
           <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
             <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
               <Lock className="w-4 h-4 text-amber-400" />

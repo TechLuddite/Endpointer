@@ -27,10 +27,17 @@ Endpointer ("we", "our", or "the app") is committed to protecting your privacy w
 
 ---
 
-## 4. Third-Party Services & Gemini AI
+## 4. Third-Party Services & Gemini LLM AI Copilot
 
-- **AI Copilot**: Optional AI analysis and chat assistant requests are routed to the Google Gemini API to assist with schema analysis and query construction. No sensitive payload data is stored by Endpointer.
-- **External Endpoints**: Requests dispatched to public APIs are subject to the respective privacy policies of those target API providers.
+- **LLM Processing**: Optional AI Copilot and schema analysis features send user prompt queries and active request context (URL, headers, query params, and response payloads) to Google Gemini LLM API endpoints (`gemini-3.6-flash`).
+- **Stateless Operation**: Endpointer does not log, track, or persist prompt history or AI completions on any database or server storage.
+- **Client Fallback**: If backend LLM endpoints are unconfigured or offline, analysis runs deterministically inside your browser without external transmission.
+
+### ⚠️ Common LLM Concerns & Warnings
+
+1. **Sensitive Data Protection**: Never include production passwords, secret keys, confidential authorization tokens, or sensitive PII (Personally Identifiable Information) in AI prompts or payload contexts. Sanitize payloads with mock data prior to requesting AI analysis.
+2. **Third-Party Model Processing**: Requests sent to the AI Copilot are processed by external foundation model infrastructure in accordance with standard Gemini API developer guidelines.
+3. **AI Hallucinations & Output Verification**: AI-generated HTTP parameters, TypeScript interfaces, and payload structures are probabilistic. Always review and validate AI-generated configurations before executing them against live production systems.
 
 ---
 
