@@ -48,6 +48,17 @@ export default function App() {
     setCollectionsState(getSavedCollections());
   }, []);
 
+  // Update page title dynamically based on active tab
+  useEffect(() => {
+    const titleMap: Record<string, string> = {
+      directory: 'Endpointer - Public API Directory & Explorer',
+      playground: 'Endpointer - Interactive REST API Playground',
+      monitor: 'Endpointer - Real-time API Health & Status Monitor',
+      collections: 'Endpointer - Saved API Collections & History',
+    };
+    document.title = titleMap[activeTab] || 'Endpointer - Interactive API Directory & REST Playground';
+  }, [activeTab]);
+
   const handleToggleFavorite = (id: string) => {
     const updated = toggleFavoriteApi(id);
     setFavorites(updated);
