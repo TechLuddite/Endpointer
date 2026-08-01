@@ -1,0 +1,6 @@
+{
+  "name": "Endpointer",
+  "description": "Interactive API Playground & Tester with public API directory, real-time status monitoring, CORS-free runner, authentication testing, and code snippet generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
