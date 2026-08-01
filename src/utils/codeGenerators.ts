@@ -37,7 +37,7 @@ export function buildHeadersRecord(config: RequestConfig): Record<string, string
     headers[config.authConfig.apiKeyName] = config.authConfig.apiKeyValue || '';
   } else if (config.authType === 'Basic Auth' && config.authConfig.basicUsername) {
     const credentials = `${config.authConfig.basicUsername}:${config.authConfig.basicPassword || ''}`;
-    const encoded = typeof btoa !== 'undefined' ? btoa(credentials) : Buffer.from(credentials).toString('base64');
+    const encoded = typeof btoa !== 'undefined' ? btoa(credentials) : (typeof Buffer !== 'undefined' ? Buffer.from(credentials).toString('base64') : '');
     headers['Authorization'] = `Basic ${encoded}`;
   }
 

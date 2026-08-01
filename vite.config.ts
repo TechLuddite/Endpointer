@@ -4,9 +4,21 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
-  // Extract repository name if building in GitHub Actions (e.g. "username/repo" -> "/repo/")
-  const repoName = process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '';
-  const base = repoName ? `/${repoName}/` : './';
+  // Use BASE_PATH from configure-pages (GitHub Actions), or derive from GITHUB_REPOSITORY, or default to './'
+  let base = process.env.BASE_PATH || '';
+
+  if (!base && process.env.GITHUB_REPOSITORY) {
+    const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
+    if (repoName && repoName.endsWith('.github.io')) {
+      base = '/';
+    } else if (repoName) {
+      base = `/${repoName}/`;
+    }
+  }
+
+  if (!base) {
+    base = './';
+  }
 
   return {
     base,
