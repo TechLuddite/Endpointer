@@ -31,7 +31,7 @@ no server required.
 - 🌐 **Environments & variables** — `{{baseUrl}}`, `{{token}}`, resolvable
   through each other. Values marked secret are swapped for placeholders on
   export.
-- 📚 **62 public APIs, re-verified daily** — a scheduled job probes every entry
+- 📚 **59 public APIs, re-verified daily** — a scheduled job probes every entry
   for reachability *and* browser (CORS) usability, and commits the results.
 - 📊 **Health board** — real uptime, p50/p95 latency and a 90-day sparkline from
   those scheduled runs, rendered on first paint with zero client-side requests.
@@ -87,7 +87,8 @@ Endpointer is explicit about it rather than pretending otherwise:
 
 - Every directory entry carries a **verified** badge refreshed daily by
   [`health-check.yml`](.github/workflows/health-check.yml) — 🟢 browser-ready,
-  🟡 needs a proxy, 🔴 unreachable — and you can filter to browser-ready only.
+  🟡 needs a proxy, ⚪ needs your own API key, 🔴 unreachable — and you can
+  filter to browser-ready only.
 - Failures distinguish CORS from DNS failure, timeout, TLS error and offline,
   instead of labelling everything "CORS".
 - For the 🟡 cases: run `npm run dev` locally (the bundled server proxies for

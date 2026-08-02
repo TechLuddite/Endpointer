@@ -138,22 +138,6 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     tags: ['weather', 'us-gov', 'alerts', 'radar'],
   },
   {
-    id: 'openaq-air',
-    name: 'OpenAQ Air Quality',
-    category: 'weather',
-    description:
-      'Global real-time air quality metrics including PM2.5, PM10, Ozone, NO2, and CO sensors.',
-    auth: 'No Auth',
-    https: true,
-    cors: 'unknown',
-    baseUrl: 'https://api.openaq.org/v2',
-    sampleEndpoint: 'https://api.openaq.org/v2/latest?limit=5',
-    defaultMethod: 'GET',
-    defaultParams: [{ key: 'limit', value: '5', description: 'Number of measurement stations' }],
-    documentationUrl: 'https://docs.openaq.org/',
-    tags: ['air-quality', 'environment', 'sensors', 'pollution'],
-  },
-  {
     id: 'sunrise-sunset',
     name: 'Sunrise-Sunset Times',
     category: 'weather',
@@ -355,6 +339,9 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     sampleEndpoint: 'https://reqres.in/api/users?page=1',
     defaultMethod: 'GET',
     defaultParams: [{ key: 'page', value: '1', description: 'Page number' }],
+    // ReqRes began requiring this header in 2025. The value is the free key
+    // published in their own documentation, not a credential.
+    defaultHeaders: [{ key: 'x-api-key', value: 'reqres-free-v1' }],
     documentationUrl: 'https://reqres.in/',
     tags: ['mock', 'users', 'crud', 'testing'],
   },
@@ -474,25 +461,6 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     defaultParams: [{ key: 'api_key', value: 'DEMO_KEY', description: 'NASA Demo API Key' }],
     documentationUrl: 'https://api.nasa.gov/',
     tags: ['nasa', 'space', 'astronomy', 'images'],
-  },
-  {
-    id: 'nasa-mars-rover',
-    name: 'NASA Mars Rover Photos',
-    category: 'data',
-    description: 'Image data gathered by Curiosity, Opportunity, and Spirit rovers on Mars.',
-    auth: 'API Key',
-    https: true,
-    cors: 'unknown',
-    baseUrl: 'https://api.nasa.gov/mars-photos/api/v1',
-    sampleEndpoint:
-      'https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=1000&page=1&api_key=DEMO_KEY',
-    defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'sol', value: '1000', description: 'Martian sol day' },
-      { key: 'api_key', value: 'DEMO_KEY', description: 'NASA API Key' },
-    ],
-    documentationUrl: 'https://api.nasa.gov/',
-    tags: ['nasa', 'mars', 'rover', 'space'],
   },
   {
     id: 'rest-countries',
@@ -1075,21 +1043,6 @@ export const PUBLIC_APIS: PublicApiItem[] = [
   // ==========================================
   // Geography & Travel
   // ==========================================
-  {
-    id: 'teleport-urban',
-    name: 'Teleport Quality of Life',
-    category: 'geo',
-    description:
-      'City quality of life scores including cost of living, safety, healthcare, pollution, and climate.',
-    auth: 'No Auth',
-    https: true,
-    cors: 'unknown',
-    baseUrl: 'https://api.teleport.org/api',
-    sampleEndpoint: 'https://api.teleport.org/api/urban_areas/slug:san-francisco-bay-area/scores/',
-    defaultMethod: 'GET',
-    documentationUrl: 'https://developers.teleport.org/',
-    tags: ['cities', 'living', 'quality-of-life', 'travel'],
-  },
   {
     id: 'zippopotam-us',
     name: 'Zippopotam.us Postal Code',

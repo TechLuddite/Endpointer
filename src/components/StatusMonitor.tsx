@@ -170,7 +170,7 @@ export function StatusMonitor({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <Metric
             label="Uptime"
             value={
@@ -192,6 +192,12 @@ export function StatusMonitor({
             value={summary ? String(summary.needsProxy) : '—'}
             tone="text-amber-400"
             hint="Reachable, but the browser blocks the response"
+          />
+          <Metric
+            label="Needs a key"
+            value={summary ? String(summary.needsCredentials ?? 0) : '—'}
+            tone="text-slate-300"
+            hint="Up, but answered the keyless check with 401/403 — add your own credential"
           />
           <Metric
             label="Unreachable"

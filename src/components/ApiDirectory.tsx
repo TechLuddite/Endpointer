@@ -319,7 +319,7 @@ export function ApiDirectory({
                     >
                       {badge.label}
                     </span>
-                    {status?.ok && (
+                    {status?.ok && !status.needsCredentials && (
                       <span
                         className="rounded-full border border-slate-700 bg-slate-950 px-2 py-0.5 font-mono text-[10px] text-slate-400"
                         title={`${status.uptimePercent}% of ${status.samples} scheduled checks succeeded`}

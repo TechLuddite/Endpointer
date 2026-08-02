@@ -70,6 +70,13 @@ export function corsBadge(entry: StatusEntry | undefined): CorsBadge {
         : `Last check returned HTTP ${entry.status}.`,
     };
   }
+  if (entry.needsCredentials) {
+    return {
+      level: 'unknown',
+      label: 'Needs your key',
+      detail: `The API is up — it returned HTTP ${entry.status} because the scheduled check has no credentials. Add your own in the Auth tab.`,
+    };
+  }
   if (entry.cors === 'yes') {
     return {
       level: 'yes',

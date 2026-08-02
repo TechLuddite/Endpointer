@@ -27,6 +27,7 @@ const PROBE_ORIGIN = 'https://endpointer.opsvibe.systems';
 
 interface ProbeResult {
   ok: boolean;
+  needsCredentials: boolean;
   status: number;
   latency: number;
   cors: CorsSupport;
@@ -50,7 +51,18 @@ function classifyCors(headers: Headers): CorsSupport {
   return 'no';
 }
 
-async function probe(url: string): Promise<ProbeResult> {
+/**
+ * A 401/403 from an endpoint that declares it needs a key is the correct
+ * response to a keyless request — the API is up. Treating it as an outage
+ * would paint every keyed entry red forever and make the failure count useless.
+ */
+function classifyOutcome(status: number, requiresAuth: boolean) {
+  const reachable = status >= 200 && status < 400;
+  const authWall = requiresAuth && (status === 401 || status === 403);
+  return { ok: reachable || authWall, needsCredentials: authWall };
+}
+
+async function probe(url: string, requiresAuth: boolean): Promise<ProbeResult> {
   const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -67,8 +79,10 @@ async function probe(url: string): Promise<ProbeResult> {
       redirect: 'follow',
     });
     clearTimeout(timer);
+    const outcome = classifyOutcome(res.status, requiresAuth);
     return {
-      ok: res.status >= 200 && res.status < 400,
+      ok: outcome.ok,
+      needsCredentials: outcome.needsCredentials,
       status: res.status,
       latency: Date.now() - started,
       cors: classifyCors(res.headers),
@@ -78,6 +92,7 @@ async function probe(url: string): Promise<ProbeResult> {
     const aborted = (err as Error)?.name === 'AbortError';
     return {
       ok: false,
+      needsCredentials: false,
       status: 0,
       latency: Date.now() - started,
       cors: 'unknown',
@@ -115,7 +130,7 @@ async function main() {
       const api = PUBLIC_APIS[index];
       if (!api) continue;
 
-      const result = await probe(api.sampleEndpoint);
+      const result = await probe(api.sampleEndpoint, api.auth !== 'No Auth');
       const prior = previousById.get(api.id);
 
       const sample: StatusSample = {
@@ -132,6 +147,7 @@ async function main() {
         id: api.id,
         url: api.sampleEndpoint,
         ok: result.ok,
+        needsCredentials: result.needsCredentials,
         status: result.status,
         latency: result.latency,
         cors: result.cors,
@@ -147,7 +163,11 @@ async function main() {
         history,
       };
 
-      const label = result.ok ? `${result.status}` : `FAIL(${result.error ?? result.status})`;
+      const label = result.needsCredentials
+        ? `${result.status} needs-key`
+        : result.ok
+          ? `${result.status}`
+          : `FAIL(${result.error ?? result.status})`;
       console.log(
         `${label.padEnd(22)} cors=${result.cors.padEnd(7)} ${String(result.latency).padStart(5)}ms  ${api.id}`,
       );
@@ -159,6 +179,7 @@ async function main() {
   const entries = results.filter(Boolean);
   const healthy = entries.filter((e) => e.ok).length;
   const browserUsable = entries.filter((e) => e.cors === 'yes').length;
+  const needsCredentials = entries.filter((e) => e.needsCredentials).length;
 
   const file: StatusFile = {
     version: 1,
@@ -169,6 +190,7 @@ async function main() {
       failing: entries.length - healthy,
       browserUsable,
       needsProxy: entries.filter((e) => e.ok && e.cors !== 'yes').length,
+      needsCredentials,
     },
     entries,
   };
@@ -177,7 +199,7 @@ async function main() {
   await writeFile(STATUS_PATH, `${JSON.stringify(file, null, 2)}\n`, 'utf8');
 
   console.log(
-    `\n${healthy}/${entries.length} reachable · ${browserUsable} usable directly from a browser`,
+    `\n${healthy}/${entries.length} reachable · ${browserUsable} browser-usable · ${needsCredentials} awaiting a user-supplied key`,
   );
 
   // Surface anything that has failed repeatedly so the workflow can open an issue.

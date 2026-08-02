@@ -226,6 +226,13 @@ export interface StatusEntry {
   id: string;
   url: string;
   ok: boolean;
+  /**
+   * The endpoint answered, but demanded credentials the checker does not have.
+   * Distinct from `ok: false` — the API is alive and the entry is usable once
+   * the user supplies their own key. Without this, every keyed API would sit
+   * permanently red on the board and the failure count would be meaningless.
+   */
+  needsCredentials?: boolean;
   status: number;
   latency: number;
   cors: CorsSupport;
@@ -248,6 +255,7 @@ export interface StatusFile {
     failing: number;
     browserUsable: number;
     needsProxy: number;
+    needsCredentials: number;
   };
   entries: StatusEntry[];
 }
