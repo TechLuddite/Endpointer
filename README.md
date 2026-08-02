@@ -31,7 +31,7 @@ no server required.
 - 🌐 **Environments & variables** — `{{baseUrl}}`, `{{token}}`, resolvable
   through each other. Values marked secret are swapped for placeholders on
   export.
-- 📚 **59 public APIs, re-verified daily** — a scheduled job probes every entry
+- 📚 **58 public APIs, re-verified daily** — a scheduled job probes every entry
   for reachability *and* browser (CORS) usability, and commits the results.
 - 📊 **Health board** — real uptime, p50/p95 latency and a 90-day sparkline from
   those scheduled runs, rendered on first paint with zero client-side requests.

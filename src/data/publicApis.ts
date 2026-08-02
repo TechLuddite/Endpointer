@@ -327,25 +327,6 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     tags: ['ecommerce', 'products', 'mock', 'fake-store'],
   },
   {
-    id: 'reqres-in',
-    name: 'ReqRes Mock User API',
-    category: 'dev',
-    description:
-      'A hosted REST API responding with simulated CRUD responses, status codes, and latency testing.',
-    auth: 'No Auth',
-    https: true,
-    cors: 'unknown',
-    baseUrl: 'https://reqres.in/api',
-    sampleEndpoint: 'https://reqres.in/api/users?page=1',
-    defaultMethod: 'GET',
-    defaultParams: [{ key: 'page', value: '1', description: 'Page number' }],
-    // ReqRes began requiring this header in 2025. The value is the free key
-    // published in their own documentation, not a credential.
-    defaultHeaders: [{ key: 'x-api-key', value: 'reqres-free-v1' }],
-    documentationUrl: 'https://reqres.in/',
-    tags: ['mock', 'users', 'crud', 'testing'],
-  },
-  {
     id: 'random-user',
     name: 'Random User Generator',
     category: 'dev',
