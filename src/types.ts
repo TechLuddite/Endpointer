@@ -105,4 +105,3 @@ export interface AiChatMessage {
   configUpdateSummary?: string;
   appliedConfig?: Partial<RequestConfig>;
 }
-

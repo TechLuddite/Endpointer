@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Play, Send, Code, Copy, Check, ShieldCheck, Sparkles, Plus, Trash2, 
-  RotateCcw, FileText, Lock, Globe, Key, Clock, Database, Layers, Eye, RefreshCw
+import {
+  Play,
+  Send,
+  Code,
+  Copy,
+  Check,
+  ShieldCheck,
+  Sparkles,
+  Plus,
+  Trash2,
+  FileText,
+  Lock,
+  Clock,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import { HttpMethod, AuthType, KeyValuePair, RequestConfig, ApiResponseData } from '../types';
 import { generateCodeSnippet, buildFullUrl } from '../utils/codeGenerators';
@@ -34,10 +46,12 @@ export const Playground: React.FC<PlaygroundProps> = ({
 }) => {
   // Request Configuration State
   const [method, setMethod] = useState<HttpMethod>('GET');
-  const [url, setUrl] = useState<string>('https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true');
+  const [url, setUrl] = useState<string>(
+    'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
+  );
   const [params, setParams] = useState<KeyValuePair[]>([]);
   const [headers, setHeaders] = useState<KeyValuePair[]>([
-    { id: '1', key: 'Accept', value: 'application/json', enabled: true }
+    { id: '1', key: 'Accept', value: 'application/json', enabled: true },
   ]);
   const [authType, setAuthType] = useState<AuthType>('No Auth');
   const [authConfig, setAuthConfig] = useState({
@@ -80,17 +94,20 @@ export const Playground: React.FC<PlaygroundProps> = ({
   }, [initialConfig]);
 
   // Construct current request config object
-  const currentConfig: RequestConfig = useMemo(() => ({
-    method,
-    url,
-    params,
-    headers,
-    authType,
-    authConfig,
-    bodyType,
-    body,
-    useProxy,
-  }), [method, url, params, headers, authType, authConfig, bodyType, body, useProxy]);
+  const currentConfig: RequestConfig = useMemo(
+    () => ({
+      method,
+      url,
+      params,
+      headers,
+      authType,
+      authConfig,
+      bodyType,
+      body,
+      useProxy,
+    }),
+    [method, url, params, headers, authType, authConfig, bodyType, body, useProxy],
+  );
 
   // Sync Params with URL query string
   const handleUrlChange = (newUrl: string) => {
@@ -138,38 +155,41 @@ export const Playground: React.FC<PlaygroundProps> = ({
     if (configUpdate.method) setMethod(configUpdate.method);
     if (configUpdate.url) handleUrlChange(configUpdate.url);
     if (configUpdate.params && Array.isArray(configUpdate.params)) {
-      setParams(configUpdate.params.map((p: any, idx: number) => ({
-        id: p.id || `ai-param-${Date.now()}-${idx}`,
-        key: p.key || '',
-        value: String(p.value ?? ''),
-        enabled: typeof p.enabled === 'boolean' ? p.enabled : true,
-      })));
+      setParams(
+        configUpdate.params.map((p: any, idx: number) => ({
+          id: p.id || `ai-param-${Date.now()}-${idx}`,
+          key: p.key || '',
+          value: String(p.value ?? ''),
+          enabled: typeof p.enabled === 'boolean' ? p.enabled : true,
+        })),
+      );
     }
     if (configUpdate.headers && Array.isArray(configUpdate.headers)) {
-      setHeaders(configUpdate.headers.map((h: any, idx: number) => ({
-        id: h.id || `ai-header-${Date.now()}-${idx}`,
-        key: h.key || '',
-        value: String(h.value ?? ''),
-        enabled: typeof h.enabled === 'boolean' ? h.enabled : true,
-      })));
+      setHeaders(
+        configUpdate.headers.map((h: any, idx: number) => ({
+          id: h.id || `ai-header-${Date.now()}-${idx}`,
+          key: h.key || '',
+          value: String(h.value ?? ''),
+          enabled: typeof h.enabled === 'boolean' ? h.enabled : true,
+        })),
+      );
     }
     if (configUpdate.authType) setAuthType(configUpdate.authType);
-    if (configUpdate.authConfig) setAuthConfig(prev => ({ ...prev, ...configUpdate.authConfig }));
+    if (configUpdate.authConfig) setAuthConfig((prev) => ({ ...prev, ...configUpdate.authConfig }));
     if (configUpdate.bodyType) setBodyType(configUpdate.bodyType);
     if (typeof configUpdate.body === 'string') setBody(configUpdate.body);
     if (typeof configUpdate.useProxy === 'boolean') setUseProxy(configUpdate.useProxy);
   };
-
 
   // Param Table Manipulations
   const addParamRow = () => {
     setParams([...params, { id: Date.now().toString(), key: '', value: '', enabled: true }]);
   };
   const removeParamRow = (id: string) => {
-    setParams(params.filter(p => p.id !== id));
+    setParams(params.filter((p) => p.id !== id));
   };
   const updateParamRow = (id: string, field: 'key' | 'value' | 'enabled', val: any) => {
-    setParams(params.map(p => (p.id === id ? { ...p, [field]: val } : p)));
+    setParams(params.map((p) => (p.id === id ? { ...p, [field]: val } : p)));
   };
 
   // Header Table Manipulations
@@ -177,10 +197,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
     setHeaders([...headers, { id: Date.now().toString(), key: '', value: '', enabled: true }]);
   };
   const removeHeaderRow = (id: string) => {
-    setHeaders(headers.filter(h => h.id !== id));
+    setHeaders(headers.filter((h) => h.id !== id));
   };
   const updateHeaderRow = (id: string, field: 'key' | 'value' | 'enabled', val: any) => {
-    setHeaders(headers.map(h => (h.id === id ? { ...h, [field]: val } : h)));
+    setHeaders(headers.map((h) => (h.id === id ? { ...h, [field]: val } : h)));
   };
 
   // Code snippet text
@@ -196,7 +216,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
   const handleCopyResponse = () => {
     if (!response) return;
-    const text = typeof response.data === 'object' ? JSON.stringify(response.data, null, 2) : String(response.data);
+    const text =
+      typeof response.data === 'object'
+        ? JSON.stringify(response.data, null, 2)
+        : String(response.data);
     navigator.clipboard.writeText(text);
     setCopiedResponse(true);
     setTimeout(() => setCopiedResponse(false), 2000);
@@ -217,7 +240,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
       {/* Top Request Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-          
           {/* Method Selector */}
           <div className="relative min-w-[120px]">
             <select
@@ -255,9 +277,15 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 ? 'bg-cyan-950/80 border-cyan-800 text-cyan-300'
                 : 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
             }`}
-            title={useProxy ? "Server proxy mode (requires backend proxy server)" : "Direct browser execution (100% static & GitHub Pages ready)"}
+            title={
+              useProxy
+                ? 'Server proxy mode (requires backend proxy server)'
+                : 'Direct browser execution (100% static & GitHub Pages ready)'
+            }
           >
-            <ShieldCheck className={`w-4 h-4 ${!useProxy ? 'text-cyan-400' : 'text-emerald-400'}`} />
+            <ShieldCheck
+              className={`w-4 h-4 ${!useProxy ? 'text-cyan-400' : 'text-emerald-400'}`}
+            />
             <span className="hidden sm:inline">Mode:</span>
             <span>{useProxy ? 'Server Proxy' : 'Direct (Browser)'}</span>
           </button>
@@ -285,12 +313,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
         {/* Quick Endpoint Presets Bar */}
         <div className="flex items-center gap-2 overflow-x-auto text-xs pt-1 border-t border-slate-800/60 text-slate-400">
-          <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">Quick Presets:</span>
+          <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
+            Quick Presets:
+          </span>
           <button
             onClick={() => {
               setMethod('GET');
-              setUrl('https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true');
-              handleUrlChange('https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true');
+              setUrl(
+                'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
+              );
+              handleUrlChange(
+                'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
+              );
             }}
             className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
           >
@@ -299,8 +333,12 @@ export const Playground: React.FC<PlaygroundProps> = ({
           <button
             onClick={() => {
               setMethod('GET');
-              setUrl('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
-              handleUrlChange('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
+              setUrl(
+                'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',
+              );
+              handleUrlChange(
+                'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',
+              );
             }}
             className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
           >
@@ -321,7 +359,13 @@ export const Playground: React.FC<PlaygroundProps> = ({
               setMethod('POST');
               setUrl('https://jsonplaceholder.typicode.com/posts');
               setBodyType('json');
-              setBody(JSON.stringify({ title: 'Endpointer Test', body: 'Testing REST POST runner', userId: 1 }, null, 2));
+              setBody(
+                JSON.stringify(
+                  { title: 'Endpointer Test', body: 'Testing REST POST runner', userId: 1 },
+                  null,
+                  2,
+                ),
+              );
             }}
             className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
           >
@@ -340,7 +384,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
       {/* Main Grid: Left Request Builder, Right Response Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* LEFT PANEL: Request Configuration */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl flex flex-col justify-between">
           <div>
@@ -357,7 +400,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
               >
                 <span>Params</span>
                 <span className="px-1.5 text-[10px] rounded-full bg-slate-950 text-slate-400">
-                  {params.filter(p => p.enabled && p.key).length}
+                  {params.filter((p) => p.enabled && p.key).length}
                 </span>
               </button>
 
@@ -372,7 +415,7 @@ export const Playground: React.FC<PlaygroundProps> = ({
               >
                 <span>Headers</span>
                 <span className="px-1.5 text-[10px] rounded-full bg-slate-950 text-slate-400">
-                  {headers.filter(h => h.enabled && h.key).length}
+                  {headers.filter((h) => h.enabled && h.key).length}
                 </span>
               </button>
 
@@ -418,7 +461,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
             {/* TAB CONTENT */}
             <div className="pt-4 min-h-[280px]">
-
               {/* PARAMS TAB */}
               {reqTab === 'params' && (
                 <div className="space-y-3">
@@ -440,7 +482,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
                   ) : (
                     <div className="space-y-2">
                       {params.map((p) => (
-                        <div key={p.id} className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800"
+                        >
                           <input
                             type="checkbox"
                             checked={p.enabled}
@@ -490,7 +535,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
 
                   <div className="space-y-2">
                     {headers.map((h) => (
-                      <div key={h.id} className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
+                      <div
+                        key={h.id}
+                        className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800"
+                      >
                         <input
                           type="checkbox"
                           checked={h.enabled}
@@ -548,7 +596,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                           type="text"
                           placeholder="e.g. api_key or X-API-KEY"
                           value={authConfig.apiKeyName}
-                          onChange={(e) => setAuthConfig({ ...authConfig, apiKeyName: e.target.value })}
+                          onChange={(e) =>
+                            setAuthConfig({ ...authConfig, apiKeyName: e.target.value })
+                          }
                           className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
                         />
                       </div>
@@ -558,7 +608,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                           type="text"
                           placeholder="Secret API key string..."
                           value={authConfig.apiKeyValue}
-                          onChange={(e) => setAuthConfig({ ...authConfig, apiKeyValue: e.target.value })}
+                          onChange={(e) =>
+                            setAuthConfig({ ...authConfig, apiKeyValue: e.target.value })
+                          }
                           className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
                         />
                       </div>
@@ -592,7 +644,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                         type="text"
                         placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
                         value={authConfig.bearerToken}
-                        onChange={(e) => setAuthConfig({ ...authConfig, bearerToken: e.target.value })}
+                        onChange={(e) =>
+                          setAuthConfig({ ...authConfig, bearerToken: e.target.value })
+                        }
                         className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
                       />
                     </div>
@@ -606,7 +660,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                           type="text"
                           placeholder="Username"
                           value={authConfig.basicUsername}
-                          onChange={(e) => setAuthConfig({ ...authConfig, basicUsername: e.target.value })}
+                          onChange={(e) =>
+                            setAuthConfig({ ...authConfig, basicUsername: e.target.value })
+                          }
                           className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
                         />
                       </div>
@@ -616,7 +672,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                           type="password"
                           placeholder="Password"
                           value={authConfig.basicPassword}
-                          onChange={(e) => setAuthConfig({ ...authConfig, basicPassword: e.target.value })}
+                          onChange={(e) =>
+                            setAuthConfig({ ...authConfig, basicPassword: e.target.value })
+                          }
                           className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
                         />
                       </div>
@@ -662,13 +720,16 @@ export const Playground: React.FC<PlaygroundProps> = ({
                     <textarea
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
-                      placeholder={bodyType === 'json' ? '{\n  "key": "value"\n}' : 'Raw payload...'}
+                      placeholder={
+                        bodyType === 'json' ? '{\n  "key": "value"\n}' : 'Raw payload...'
+                      }
                       rows={9}
                       className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-200 focus:outline-none focus:border-cyan-500 leading-relaxed"
                     />
                   ) : (
                     <div className="text-center py-10 text-slate-500 text-xs bg-slate-950 border border-slate-800 rounded-xl">
-                      Request method ({method}) has no request body payload attached. Select JSON or Raw above to edit.
+                      Request method ({method}) has no request body payload attached. Select JSON or
+                      Raw above to edit.
                     </div>
                   )}
                 </div>
@@ -697,7 +758,11 @@ export const Playground: React.FC<PlaygroundProps> = ({
                       onClick={handleCopyCode}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
                     >
-                      {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                      {copiedCode ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-slate-400" />
+                      )}
                       <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
                     </button>
                   </div>
@@ -707,13 +772,14 @@ export const Playground: React.FC<PlaygroundProps> = ({
                   </pre>
                 </div>
               )}
-
             </div>
           </div>
 
           {/* Action Footer */}
           <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span className="font-mono text-[11px]">Target: {buildFullUrl(currentConfig).slice(0, 45)}...</span>
+            <span className="font-mono text-[11px]">
+              Target: {buildFullUrl(currentConfig).slice(0, 45)}...
+            </span>
             <button
               onClick={() => onSaveToCollection(currentConfig, response || undefined)}
               className="flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-semibold"
@@ -730,7 +796,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
             {/* Response Status Bar */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Response</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Response
+                </span>
                 {response && (
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
@@ -764,7 +832,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <button
                   onClick={() => setResTab('parsed')}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    resTab === 'parsed' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-400 hover:text-slate-200'
+                    resTab === 'parsed'
+                      ? 'bg-slate-800 text-cyan-400 border border-slate-700'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Parsed JSON
@@ -772,7 +842,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <button
                   onClick={() => setResTab('raw')}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    resTab === 'raw' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-400 hover:text-slate-200'
+                    resTab === 'raw'
+                      ? 'bg-slate-800 text-cyan-400 border border-slate-700'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Raw Body
@@ -780,7 +852,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                 <button
                   onClick={() => setResTab('headers')}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    resTab === 'headers' ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'text-slate-400 hover:text-slate-200'
+                    resTab === 'headers'
+                      ? 'bg-slate-800 text-cyan-400 border border-slate-700'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Response Headers ({response ? Object.keys(response.headers).length : 0})
@@ -794,14 +868,18 @@ export const Playground: React.FC<PlaygroundProps> = ({
                     className="p-1.5 text-slate-400 hover:text-slate-200 bg-slate-950 rounded-lg border border-slate-800"
                     title="Copy Response Data"
                   >
-                    {copiedResponse ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedResponse ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
-                  
+
                   <button
                     onClick={() =>
                       openAiModalWithContext(
                         'Analyze this API response structure, generate TypeScript interface, and explain key fields.',
-                        response.data
+                        response.data,
                       )
                     }
                     className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 text-indigo-300 text-xs font-semibold transition-all"
@@ -820,7 +898,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                   <Play className="w-10 h-10 text-slate-700" />
                   <div>
                     <h4 className="font-bold text-slate-400 text-sm">No Request Executed Yet</h4>
-                    <p className="text-xs text-slate-600">Click 'Send' above to execute request & inspect response payload.</p>
+                    <p className="text-xs text-slate-600">
+                      Click 'Send' above to execute request & inspect response payload.
+                    </p>
                   </div>
                 </div>
               )}
@@ -828,7 +908,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
               {loading && (
                 <div className="flex flex-col items-center justify-center py-20 text-center space-y-3 bg-slate-950/60 border border-slate-800/80 rounded-xl">
                   <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
-                  <p className="text-xs font-mono text-cyan-300">Fetching endpoint response via server proxy...</p>
+                  <p className="text-xs font-mono text-cyan-300">
+                    Fetching endpoint response via server proxy...
+                  </p>
                 </div>
               )}
 
@@ -857,7 +939,9 @@ export const Playground: React.FC<PlaygroundProps> = ({
                   {/* RAW TAB */}
                   {resTab === 'raw' && (
                     <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed max-h-[320px] whitespace-pre-wrap select-text">
-                      {typeof response.data === 'object' ? JSON.stringify(response.data) : String(response.data)}
+                      {typeof response.data === 'object'
+                        ? JSON.stringify(response.data)
+                        : String(response.data)}
                     </pre>
                   )}
 
@@ -865,9 +949,14 @@ export const Playground: React.FC<PlaygroundProps> = ({
                   {resTab === 'headers' && (
                     <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 max-h-[320px] overflow-y-auto space-y-1 font-mono text-xs">
                       {Object.entries(response.headers).map(([k, v]) => (
-                        <div key={k} className="flex items-start justify-between py-1 border-b border-slate-900 last:border-0">
+                        <div
+                          key={k}
+                          className="flex items-start justify-between py-1 border-b border-slate-900 last:border-0"
+                        >
                           <span className="text-cyan-400 font-semibold">{k}:</span>
-                          <span className="text-slate-300 text-right max-w-[60%] break-all">{v}</span>
+                          <span className="text-slate-300 text-right max-w-[60%] break-all">
+                            {v}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -883,7 +972,6 @@ export const Playground: React.FC<PlaygroundProps> = ({
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

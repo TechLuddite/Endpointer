@@ -1,18 +1,79 @@
 import { PublicApiItem, ApiCategory } from '../types';
 
 export const API_CATEGORIES: ApiCategory[] = [
-  { id: 'all', name: 'All Categories', icon: 'Grid', description: 'Explore all public APIs in the catalog' },
-  { id: 'weather', name: 'Weather & Climate', icon: 'CloudSun', description: 'Meteorological data, forecasts, and air quality' },
-  { id: 'finance', name: 'Finance & Crypto', icon: 'Coins', description: 'Exchange rates, cryptocurrency, stock indicators, and blockchain' },
-  { id: 'dev', name: 'Developer Tools', icon: 'Code', description: 'Placeholders, IP lookups, HTTP tools, mock data, and user profile generators' },
-  { id: 'data', name: 'Data & Science', icon: 'Database', description: 'NASA space data, global geography, earth science, and statistics' },
-  { id: 'entertainment', name: 'Games & Pop Culture', icon: 'Gamepad2', description: 'Pokédex, anime, trivia, card decks, game deals, and TV shows' },
-  { id: 'animals', name: 'Animals & Nature', icon: 'Dog', description: 'Cat/dog facts, random pictures, and marine biology' },
-  { id: 'quotes', name: 'Quotes & Humor', icon: 'Quote', description: 'Inspirational quotes, advice slips, jokes, and corporate jargon' },
-  { id: 'news', name: 'News & Language', icon: 'Newspaper', description: 'Dictionary definitions, Wikipedia summaries, Hacker News, and rhymes' },
-  { id: 'food', name: 'Food & Drinks', icon: 'Utensils', description: 'Recipes, cocktails, fruit nutrition, and barcode product databases' },
-  { id: 'art', name: 'Art, Books & Music', icon: 'BookOpen', description: 'Classical literature, poetry collections, museum artifacts, and open library data' },
-  { id: 'geo', name: 'Geography & Travel', icon: 'Globe', description: 'Zipcode lookup, urban quality-of-life scores, and reverse geocoding' },
+  {
+    id: 'all',
+    name: 'All Categories',
+    icon: 'Grid',
+    description: 'Explore all public APIs in the catalog',
+  },
+  {
+    id: 'weather',
+    name: 'Weather & Climate',
+    icon: 'CloudSun',
+    description: 'Meteorological data, forecasts, and air quality',
+  },
+  {
+    id: 'finance',
+    name: 'Finance & Crypto',
+    icon: 'Coins',
+    description: 'Exchange rates, cryptocurrency, stock indicators, and blockchain',
+  },
+  {
+    id: 'dev',
+    name: 'Developer Tools',
+    icon: 'Code',
+    description: 'Placeholders, IP lookups, HTTP tools, mock data, and user profile generators',
+  },
+  {
+    id: 'data',
+    name: 'Data & Science',
+    icon: 'Database',
+    description: 'NASA space data, global geography, earth science, and statistics',
+  },
+  {
+    id: 'entertainment',
+    name: 'Games & Pop Culture',
+    icon: 'Gamepad2',
+    description: 'Pokédex, anime, trivia, card decks, game deals, and TV shows',
+  },
+  {
+    id: 'animals',
+    name: 'Animals & Nature',
+    icon: 'Dog',
+    description: 'Cat/dog facts, random pictures, and marine biology',
+  },
+  {
+    id: 'quotes',
+    name: 'Quotes & Humor',
+    icon: 'Quote',
+    description: 'Inspirational quotes, advice slips, jokes, and corporate jargon',
+  },
+  {
+    id: 'news',
+    name: 'News & Language',
+    icon: 'Newspaper',
+    description: 'Dictionary definitions, Wikipedia summaries, Hacker News, and rhymes',
+  },
+  {
+    id: 'food',
+    name: 'Food & Drinks',
+    icon: 'Utensils',
+    description: 'Recipes, cocktails, fruit nutrition, and barcode product databases',
+  },
+  {
+    id: 'art',
+    name: 'Art, Books & Music',
+    icon: 'BookOpen',
+    description:
+      'Classical literature, poetry collections, museum artifacts, and open library data',
+  },
+  {
+    id: 'geo',
+    name: 'Geography & Travel',
+    icon: 'Globe',
+    description: 'Zipcode lookup, urban quality-of-life scores, and reverse geocoding',
+  },
 ];
 
 export const PUBLIC_APIS: PublicApiItem[] = [
@@ -23,88 +84,94 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'open-meteo',
     name: 'Open-Meteo Forecast',
     category: 'weather',
-    description: 'Free open-source weather API providing global high-resolution hourly weather forecasts with no API key.',
+    description:
+      'Free open-source weather API providing global high-resolution hourly weather forecasts with no API key.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.open-meteo.com/v1',
-    sampleEndpoint: 'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
+    sampleEndpoint:
+      'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'latitude', value: '37.7749', description: 'Latitude (San Francisco)' },
       { key: 'longitude', value: '-122.4194', description: 'Longitude (San Francisco)' },
       { key: 'current_weather', value: 'true', description: 'Include current weather object' },
-      { key: 'hourly', value: 'temperature_2m,relative_humidity_2m', description: 'Hourly variables' }
+      {
+        key: 'hourly',
+        value: 'temperature_2m,relative_humidity_2m',
+        description: 'Hourly variables',
+      },
     ],
     documentationUrl: 'https://open-meteo.com/en/docs',
-    tags: ['weather', 'forecast', 'climate', 'no-key']
+    tags: ['weather', 'forecast', 'climate', 'no-key'],
   },
   {
     id: 'wttr-in',
     name: 'wttr.in Weather JSON',
     category: 'weather',
-    description: 'Console-oriented and JSON weather service supporting location names, ZIP codes, and airports.',
+    description:
+      'Console-oriented and JSON weather service supporting location names, ZIP codes, and airports.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://wttr.in',
     sampleEndpoint: 'https://wttr.in/London?format=j1',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/chubin/wttr.in',
-    tags: ['weather', 'terminal', 'json', 'forecast']
+    tags: ['weather', 'terminal', 'json', 'forecast'],
   },
   {
     id: 'nws-weather',
     name: 'National Weather Service (US)',
     category: 'weather',
-    description: 'Official US weather forecasts, severe weather alerts, radar observations, and station data.',
+    description:
+      'Official US weather forecasts, severe weather alerts, radar observations, and station data.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.weather.gov',
     sampleEndpoint: 'https://api.weather.gov/gridpoints/TOP/31,80/forecast',
     defaultMethod: 'GET',
-    defaultHeaders: [
-      { key: 'User-Agent', value: 'EndpointerApp/2.4 (contact@example.com)' }
-    ],
+    defaultHeaders: [{ key: 'User-Agent', value: 'EndpointerApp/2.4 (contact@example.com)' }],
     documentationUrl: 'https://www.weather.gov/documentation/services-web-api',
-    tags: ['weather', 'us-gov', 'alerts', 'radar']
+    tags: ['weather', 'us-gov', 'alerts', 'radar'],
   },
   {
     id: 'openaq-air',
     name: 'OpenAQ Air Quality',
     category: 'weather',
-    description: 'Global real-time air quality metrics including PM2.5, PM10, Ozone, NO2, and CO sensors.',
+    description:
+      'Global real-time air quality metrics including PM2.5, PM10, Ozone, NO2, and CO sensors.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.openaq.org/v2',
     sampleEndpoint: 'https://api.openaq.org/v2/latest?limit=5',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'limit', value: '5', description: 'Number of measurement stations' }
-    ],
+    defaultParams: [{ key: 'limit', value: '5', description: 'Number of measurement stations' }],
     documentationUrl: 'https://docs.openaq.org/',
-    tags: ['air-quality', 'environment', 'sensors', 'pollution']
+    tags: ['air-quality', 'environment', 'sensors', 'pollution'],
   },
   {
     id: 'sunrise-sunset',
     name: 'Sunrise-Sunset Times',
     category: 'weather',
-    description: 'Calculates solar times including sunrise, sunset, solar noon, and twilight for any coordinates.',
+    description:
+      'Calculates solar times including sunrise, sunset, solar noon, and twilight for any coordinates.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.sunrise-sunset.org',
     sampleEndpoint: 'https://api.sunrise-sunset.org/json?lat=37.7749&lng=-122.4194&date=today',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'lat', value: '37.7749', description: 'Latitude' },
       { key: 'lng', value: '-122.4194', description: 'Longitude' },
-      { key: 'date', value: 'today', description: 'Date (YYYY-MM-DD or today)' }
+      { key: 'date', value: 'today', description: 'Date (YYYY-MM-DD or today)' },
     ],
     documentationUrl: 'https://sunrise-sunset.org/api',
-    tags: ['solar', 'sun', 'daylight', 'astronomy']
+    tags: ['solar', 'sun', 'daylight', 'astronomy'],
   },
 
   // ==========================================
@@ -114,97 +181,71 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'coingecko',
     name: 'CoinGecko Simple Price',
     category: 'finance',
-    description: 'Live cryptocurrency prices, 24h market volume, total supply, and token price changes.',
+    description:
+      'Live cryptocurrency prices, 24h market volume, total supply, and token price changes.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.coingecko.com/api/v3',
-    sampleEndpoint: 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd,eur&include_24hr_change=true',
+    sampleEndpoint:
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd,eur&include_24hr_change=true',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'ids', value: 'bitcoin,ethereum,solana', description: 'Coin identifiers' },
       { key: 'vs_currencies', value: 'usd,eur', description: 'Target fiat currencies' },
-      { key: 'include_24hr_change', value: 'true', description: 'Show 24h percentage change' }
+      { key: 'include_24hr_change', value: 'true', description: 'Show 24h percentage change' },
     ],
     documentationUrl: 'https://www.coingecko.com/en/api/documentation',
-    tags: ['crypto', 'bitcoin', 'currency', 'prices']
-  },
-  {
-    id: 'coincap-assets',
-    name: 'CoinCap Crypto Assets',
-    category: 'finance',
-    description: 'Real-time cryptocurrency market rankings, pricing, volume, market cap, and supply data.',
-    auth: 'No Auth',
-    https: true,
-    cors: 'yes',
-    baseUrl: 'https://api.coincap.io/v2',
-    sampleEndpoint: 'https://api.coincap.io/v2/assets?limit=10',
-    defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'limit', value: '10', description: 'Top N coins by market cap' }
-    ],
-    documentationUrl: 'https://docs.coincap.io/',
-    tags: ['crypto', 'marketcap', 'trading', 'realtime']
+    tags: ['crypto', 'bitcoin', 'currency', 'prices'],
   },
   {
     id: 'frankfurter',
     name: 'Frankfurter Exchange Rates',
     category: 'finance',
-    description: 'Open-source currency foreign exchange rates API published daily by the European Central Bank.',
+    description:
+      'Open-source currency foreign exchange rates API published daily by the European Central Bank.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.frankfurter.app',
     sampleEndpoint: 'https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CAD',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'from', value: 'USD', description: 'Base fiat currency' },
-      { key: 'to', value: 'EUR,GBP,JPY,CAD', description: 'Target currencies' }
+      { key: 'to', value: 'EUR,GBP,JPY,CAD', description: 'Target currencies' },
     ],
     documentationUrl: 'https://www.frankfurter.app/docs/',
-    tags: ['currency', 'forex', 'finance', 'ecb']
+    tags: ['currency', 'forex', 'finance', 'ecb'],
   },
   {
     id: 'exchangerate-api',
     name: 'Open Exchange Rates',
     category: 'finance',
-    description: 'Free exchange rates endpoint providing conversion ratios for over 160 global currencies.',
+    description:
+      'Free exchange rates endpoint providing conversion ratios for over 160 global currencies.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://open.er-api.com/v6',
     sampleEndpoint: 'https://open.er-api.com/v6/latest/USD',
     defaultMethod: 'GET',
     documentationUrl: 'https://www.exchangerate-api.com/docs/free',
-    tags: ['forex', 'currency', 'rates', 'conversion']
-  },
-  {
-    id: 'coindesk-bpi',
-    name: 'CoinDesk Bitcoin Price Index',
-    category: 'finance',
-    description: 'Official CoinDesk BPI feeding current Bitcoin prices in USD, GBP, and EUR.',
-    auth: 'No Auth',
-    https: true,
-    cors: 'yes',
-    baseUrl: 'https://api.coindesk.com/v1',
-    sampleEndpoint: 'https://api.coindesk.com/v1/bpi/currentprice.json',
-    defaultMethod: 'GET',
-    documentationUrl: 'https://www.coindesk.com/coindesk-api',
-    tags: ['bitcoin', 'bpi', 'coindesk', 'crypto']
+    tags: ['forex', 'currency', 'rates', 'conversion'],
   },
   {
     id: 'mempool-space',
     name: 'Mempool.space Bitcoin Network',
     category: 'finance',
-    description: 'Bitcoin mempool statistics, recommended transaction fee rates, blocks, and hash rate.',
+    description:
+      'Bitcoin mempool statistics, recommended transaction fee rates, blocks, and hash rate.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://mempool.space/api/v1',
     sampleEndpoint: 'https://mempool.space/api/v1/fees/recommended',
     defaultMethod: 'GET',
     documentationUrl: 'https://mempool.space/docs/api/rest',
-    tags: ['bitcoin', 'blockchain', 'fees', 'mempool']
+    tags: ['bitcoin', 'blockchain', 'fees', 'mempool'],
   },
 
   // ==========================================
@@ -214,15 +255,16 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'ip-api',
     name: 'IP Geolocation API',
     category: 'dev',
-    description: 'Queries IP location, ISP, country, city, coordinates, and timezone without registration.',
+    description:
+      'Queries IP location, ISP, country, city, coordinates, and timezone without registration.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://ipapi.co',
     sampleEndpoint: 'https://ipapi.co/json/',
     defaultMethod: 'GET',
     documentationUrl: 'https://ipapi.co/api/',
-    tags: ['ip', 'geolocation', 'network', 'no-key']
+    tags: ['ip', 'geolocation', 'network', 'no-key'],
   },
   {
     id: 'ipify-ip',
@@ -231,29 +273,28 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'A simple public IP address API returning client outward IPv4/IPv6 address.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.ipify.org',
     sampleEndpoint: 'https://api.ipify.org?format=json',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'format', value: 'json', description: 'Response format (json/jsonp)' }
-    ],
+    defaultParams: [{ key: 'format', value: 'json', description: 'Response format (json/jsonp)' }],
     documentationUrl: 'https://www.ipify.org/',
-    tags: ['ip', 'utility', 'network', 'simple']
+    tags: ['ip', 'utility', 'network', 'simple'],
   },
   {
     id: 'json-placeholder',
     name: 'JSONPlaceholder API',
     category: 'dev',
-    description: 'Free fake REST API for testing and prototyping (posts, comments, albums, photos, todos, users).',
+    description:
+      'Free fake REST API for testing and prototyping (posts, comments, albums, photos, todos, users).',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://jsonplaceholder.typicode.com',
     sampleEndpoint: 'https://jsonplaceholder.typicode.com/posts/1',
     defaultMethod: 'GET',
     documentationUrl: 'https://jsonplaceholder.typicode.com/',
-    tags: ['mock', 'testing', 'posts', 'todos']
+    tags: ['mock', 'testing', 'posts', 'todos'],
   },
   {
     id: 'json-placeholder-todos',
@@ -262,115 +303,111 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Returns mock task objects complete with user IDs and completion statuses.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://jsonplaceholder.typicode.com',
     sampleEndpoint: 'https://jsonplaceholder.typicode.com/todos?_limit=5',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: '_limit', value: '5', description: 'Limit number of returned items' }
-    ],
+    defaultParams: [{ key: '_limit', value: '5', description: 'Limit number of returned items' }],
     documentationUrl: 'https://jsonplaceholder.typicode.com/',
-    tags: ['mock', 'todos', 'testing']
+    tags: ['mock', 'todos', 'testing'],
   },
   {
     id: 'httpbin',
     name: 'HTTPBin Echo & Test',
     category: 'dev',
-    description: 'HTTP request & response service for testing headers, status codes, auth, and IP reflection.',
+    description:
+      'HTTP request & response service for testing headers, status codes, auth, and IP reflection.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://httpbin.org',
     sampleEndpoint: 'https://httpbin.org/get?sample=value',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'test', value: 'endpointer_client', description: 'Echo parameter' }
-    ],
+    defaultParams: [{ key: 'test', value: 'endpointer_client', description: 'Echo parameter' }],
     documentationUrl: 'https://httpbin.org/',
-    tags: ['http', 'echo', 'testing', 'headers']
+    tags: ['http', 'echo', 'testing', 'headers'],
   },
   {
     id: 'dummyjson-products',
     name: 'DummyJSON Mock E-Commerce',
     category: 'dev',
-    description: 'Full REST dummy data store offering realistic product catalogs, carts, users, and posts.',
+    description:
+      'Full REST dummy data store offering realistic product catalogs, carts, users, and posts.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://dummyjson.com',
     sampleEndpoint: 'https://dummyjson.com/products/1',
     defaultMethod: 'GET',
     documentationUrl: 'https://dummyjson.com/docs',
-    tags: ['ecommerce', 'products', 'mock', 'fake-store']
+    tags: ['ecommerce', 'products', 'mock', 'fake-store'],
   },
   {
     id: 'reqres-in',
     name: 'ReqRes Mock User API',
     category: 'dev',
-    description: 'A hosted REST API responding with simulated CRUD responses, status codes, and latency testing.',
+    description:
+      'A hosted REST API responding with simulated CRUD responses, status codes, and latency testing.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://reqres.in/api',
     sampleEndpoint: 'https://reqres.in/api/users?page=1',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'page', value: '1', description: 'Page number' }
-    ],
+    defaultParams: [{ key: 'page', value: '1', description: 'Page number' }],
     documentationUrl: 'https://reqres.in/',
-    tags: ['mock', 'users', 'crud', 'testing']
+    tags: ['mock', 'users', 'crud', 'testing'],
   },
   {
     id: 'random-user',
     name: 'Random User Generator',
     category: 'dev',
-    description: 'Generates fake user profiles including name, email, avatar image, address, and credentials.',
+    description:
+      'Generates fake user profiles including name, email, avatar image, address, and credentials.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://randomuser.me/api',
     sampleEndpoint: 'https://randomuser.me/api/?results=3',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'results', value: '3', description: 'Number of random users' },
-      { key: 'nat', value: 'us,gb,ca', description: 'Nationalities' }
+      { key: 'nat', value: 'us,gb,ca', description: 'Nationalities' },
     ],
     documentationUrl: 'https://randomuser.me/documentation',
-    tags: ['mock', 'users', 'avatars', 'testing']
+    tags: ['mock', 'users', 'avatars', 'testing'],
   },
   {
     id: 'agify-io',
     name: 'Agify.io Name Age Estimate',
     category: 'dev',
-    description: 'Predicts the age of a person based on their first name using demographic census probabilities.',
+    description:
+      'Predicts the age of a person based on their first name using demographic census probabilities.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.agify.io',
     sampleEndpoint: 'https://api.agify.io/?name=michael',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'name', value: 'michael', description: 'First name to analyze' }
-    ],
+    defaultParams: [{ key: 'name', value: 'michael', description: 'First name to analyze' }],
     documentationUrl: 'https://agify.io/',
-    tags: ['demographics', 'name', 'age', 'ml']
+    tags: ['demographics', 'name', 'age', 'ml'],
   },
   {
     id: 'genderize-io',
     name: 'Genderize.io Name Predictor',
     category: 'dev',
-    description: 'Estimates gender probability based on first names across millions of recorded user profiles.',
+    description:
+      'Estimates gender probability based on first names across millions of recorded user profiles.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.genderize.io',
     sampleEndpoint: 'https://api.genderize.io/?name=lucy',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'name', value: 'lucy', description: 'First name' }
-    ],
+    defaultParams: [{ key: 'name', value: 'lucy', description: 'First name' }],
     documentationUrl: 'https://genderize.io/',
-    tags: ['demographics', 'gender', 'name']
+    tags: ['demographics', 'gender', 'name'],
   },
   {
     id: 'nationalize-io',
@@ -379,46 +416,44 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Predicts country of origin probabilities for a surname or given name.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.nationalize.io',
     sampleEndpoint: 'https://api.nationalize.io/?name=nathan',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'name', value: 'nathan', description: 'Name' }
-    ],
+    defaultParams: [{ key: 'name', value: 'nathan', description: 'Name' }],
     documentationUrl: 'https://nationalize.io/',
-    tags: ['demographics', 'nationality', 'name']
+    tags: ['demographics', 'nationality', 'name'],
   },
   {
     id: 'github-users',
     name: 'GitHub REST User Profile',
     category: 'dev',
-    description: 'Public GitHub developer user profile metadata, bio, followers, and public repository counts.',
+    description:
+      'Public GitHub developer user profile metadata, bio, followers, and public repository counts.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.github.com',
     sampleEndpoint: 'https://api.github.com/users/octocat',
     defaultMethod: 'GET',
     documentationUrl: 'https://docs.github.com/en/rest',
-    tags: ['github', 'developer', 'profile', 'git']
+    tags: ['github', 'developer', 'profile', 'git'],
   },
   {
     id: 'github-repos',
     name: 'GitHub Public Repositories',
     category: 'dev',
-    description: 'Fetches public repositories, star counts, topics, and programming languages for a user.',
+    description:
+      'Fetches public repositories, star counts, topics, and programming languages for a user.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.github.com',
     sampleEndpoint: 'https://api.github.com/users/octocat/repos?per_page=5',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'per_page', value: '5', description: 'Repositories per page' }
-    ],
+    defaultParams: [{ key: 'per_page', value: '5', description: 'Repositories per page' }],
     documentationUrl: 'https://docs.github.com/en/rest/repos',
-    tags: ['github', 'repos', 'code', 'open-source']
+    tags: ['github', 'repos', 'code', 'open-source'],
   },
 
   // ==========================================
@@ -428,18 +463,17 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'nasa-apod',
     name: 'NASA APOD (Astronomy Picture)',
     category: 'data',
-    description: 'NASA Astronomy Picture of the Day with high-res space imagery, scientific descriptions, and credits.',
+    description:
+      'NASA Astronomy Picture of the Day with high-res space imagery, scientific descriptions, and credits.',
     auth: 'API Key',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.nasa.gov/planetary',
     sampleEndpoint: 'https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'api_key', value: 'DEMO_KEY', description: 'NASA Demo API Key' }
-    ],
+    defaultParams: [{ key: 'api_key', value: 'DEMO_KEY', description: 'NASA Demo API Key' }],
     documentationUrl: 'https://api.nasa.gov/',
-    tags: ['nasa', 'space', 'astronomy', 'images']
+    tags: ['nasa', 'space', 'astronomy', 'images'],
   },
   {
     id: 'nasa-mars-rover',
@@ -448,62 +482,67 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Image data gathered by Curiosity, Opportunity, and Spirit rovers on Mars.',
     auth: 'API Key',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.nasa.gov/mars-photos/api/v1',
-    sampleEndpoint: 'https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=1000&page=1&api_key=DEMO_KEY',
+    sampleEndpoint:
+      'https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=1000&page=1&api_key=DEMO_KEY',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'sol', value: '1000', description: 'Martian sol day' },
-      { key: 'api_key', value: 'DEMO_KEY', description: 'NASA API Key' }
+      { key: 'api_key', value: 'DEMO_KEY', description: 'NASA API Key' },
     ],
     documentationUrl: 'https://api.nasa.gov/',
-    tags: ['nasa', 'mars', 'rover', 'space']
+    tags: ['nasa', 'mars', 'rover', 'space'],
   },
   {
     id: 'rest-countries',
     name: 'REST Countries API',
     category: 'data',
-    description: 'Comprehensive country details: capital city, population, region, currencies, languages, and flag vectors.',
+    description:
+      'Comprehensive country details: capital city, population, region, currencies, languages, and flag vectors.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://restcountries.com/v3.1',
     sampleEndpoint: 'https://restcountries.com/v3.1/name/japan',
     defaultMethod: 'GET',
     documentationUrl: 'https://restcountries.com/',
-    tags: ['geography', 'countries', 'flags', 'data']
+    tags: ['geography', 'countries', 'flags', 'data'],
   },
   {
     id: 'rest-countries-region',
     name: 'REST Countries By Region',
     category: 'data',
-    description: 'Filter global nations by continental regions (e.g., Europe, Asia, Americas, Africa, Oceania).',
+    description:
+      'Filter global nations by continental regions (e.g., Europe, Asia, Americas, Africa, Oceania).',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://restcountries.com/v3.1',
     sampleEndpoint: 'https://restcountries.com/v3.1/region/europe',
     defaultMethod: 'GET',
     documentationUrl: 'https://restcountries.com/',
-    tags: ['geography', 'europe', 'regions']
+    tags: ['geography', 'europe', 'regions'],
   },
   {
     id: 'usgs-earthquake',
     name: 'USGS Earthquake Hazards',
     category: 'data',
-    description: 'Real-time seismic activity, magnitude, epicenter, and tsunami alerts monitored by the USGS.',
+    description:
+      'Real-time seismic activity, magnitude, epicenter, and tsunami alerts monitored by the USGS.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://earthquake.usgs.gov/fdsnws/event/1',
-    sampleEndpoint: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2024-01-01&minmagnitude=5',
+    sampleEndpoint:
+      'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2024-01-01&minmagnitude=5',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'format', value: 'geojson', description: 'Output format' },
-      { key: 'minmagnitude', value: '5', description: 'Minimum Richter magnitude' }
+      { key: 'minmagnitude', value: '5', description: 'Minimum Richter magnitude' },
     ],
     documentationUrl: 'https://earthquake.usgs.gov/fdsnws/event/1/',
-    tags: ['earthquake', 'seismic', 'usgs', 'geology']
+    tags: ['earthquake', 'seismic', 'usgs', 'geology'],
   },
   {
     id: 'worldbank-data',
@@ -512,29 +551,28 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Global economic, social, and demographic statistics compiled by the World Bank.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.worldbank.org/v2',
     sampleEndpoint: 'https://api.worldbank.org/v2/country/USA?format=json',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'format', value: 'json', description: 'JSON response' }
-    ],
+    defaultParams: [{ key: 'format', value: 'json', description: 'JSON response' }],
     documentationUrl: 'https://datahelpdesk.worldbank.org/knowledgebase/topics/125589',
-    tags: ['economics', 'statistics', 'worldbank', 'demographics']
+    tags: ['economics', 'statistics', 'worldbank', 'demographics'],
   },
   {
     id: 'spacex-launches',
     name: 'SpaceX Latest Rocket Launch',
     category: 'data',
-    description: 'Latest mission telemetry, launchpad details, payloads, core landings, and webcast links.',
+    description:
+      'Latest mission telemetry, launchpad details, payloads, core landings, and webcast links.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.spacexdata.com/v4',
     sampleEndpoint: 'https://api.spacexdata.com/v4/launches/latest',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/r-spacex/SpaceX-API',
-    tags: ['spacex', 'rockets', 'space', 'telemetry']
+    tags: ['spacex', 'rockets', 'space', 'telemetry'],
   },
   {
     id: 'spacex-rockets',
@@ -543,12 +581,12 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Specifications for Falcon 9, Falcon Heavy, Starship, and Dragon space vehicles.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.spacexdata.com/v4',
     sampleEndpoint: 'https://api.spacexdata.com/v4/rockets',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/r-spacex/SpaceX-API',
-    tags: ['spacex', 'starship', 'falcon9']
+    tags: ['spacex', 'starship', 'falcon9'],
   },
 
   // ==========================================
@@ -558,15 +596,16 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'pokeapi',
     name: 'PokéAPI (Pokémon)',
     category: 'entertainment',
-    description: 'RESTful Pokémon database containing stats, moves, abilities, species, and sprites.',
+    description:
+      'RESTful Pokémon database containing stats, moves, abilities, species, and sprites.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://pokeapi.co/api/v2',
     sampleEndpoint: 'https://pokeapi.co/api/v2/pokemon/pikachu',
     defaultMethod: 'GET',
     documentationUrl: 'https://pokeapi.co/docs/v2',
-    tags: ['pokemon', 'anime', 'games', 'nintendo']
+    tags: ['pokemon', 'anime', 'games', 'nintendo'],
   },
   {
     id: 'pokeapi-ability',
@@ -575,111 +614,115 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Detailed move damage, accuracy, type, and status effects across generations.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://pokeapi.co/api/v2',
     sampleEndpoint: 'https://pokeapi.co/api/v2/ability/1',
     defaultMethod: 'GET',
     documentationUrl: 'https://pokeapi.co/docs/v2',
-    tags: ['pokemon', 'abilities', 'battle']
+    tags: ['pokemon', 'abilities', 'battle'],
   },
   {
     id: 'jikan-anime',
     name: 'Jikan (MyAnimeList API)',
     category: 'entertainment',
-    description: 'Unofficial MyAnimeList REST API providing detailed anime, manga, character, and schedule data.',
+    description:
+      'Unofficial MyAnimeList REST API providing detailed anime, manga, character, and schedule data.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.jikan.moe/v4',
     sampleEndpoint: 'https://api.jikan.moe/v4/anime?q=naruto&limit=5',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'q', value: 'one piece', description: 'Search term' },
-      { key: 'limit', value: '5', description: 'Max items' }
+      { key: 'limit', value: '5', description: 'Max items' },
     ],
     documentationUrl: 'https://docs.api.jikan.moe/',
-    tags: ['anime', 'manga', 'entertainment', 'myanimelist']
+    tags: ['anime', 'manga', 'entertainment', 'myanimelist'],
   },
   {
     id: 'deck-of-cards',
     name: 'Deck of Cards API',
     category: 'entertainment',
-    description: 'Shuffle decks, draw cards, create piles, and build virtual card games with REST calls.',
+    description:
+      'Shuffle decks, draw cards, create piles, and build virtual card games with REST calls.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://deckofcardsapi.com/api',
     sampleEndpoint: 'https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1',
     defaultMethod: 'GET',
     documentationUrl: 'https://deckofcardsapi.com/',
-    tags: ['cards', 'games', 'casino']
+    tags: ['cards', 'games', 'casino'],
   },
   {
     id: 'open-trivia-db',
     name: 'Open Trivia Database',
     category: 'entertainment',
-    description: 'Multiple choice trivia questions across science, history, video games, movies, and geography.',
+    description:
+      'Multiple choice trivia questions across science, history, video games, movies, and geography.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://opentdb.com',
     sampleEndpoint: 'https://opentdb.com/api.php?amount=5&category=18&type=multiple',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'amount', value: '5', description: 'Question count' },
-      { key: 'category', value: '18', description: '18 = Science & Computers' }
+      { key: 'category', value: '18', description: '18 = Science & Computers' },
     ],
     documentationUrl: 'https://opentdb.com/api_config.php',
-    tags: ['trivia', 'quiz', 'games', 'knowledge']
+    tags: ['trivia', 'quiz', 'games', 'knowledge'],
   },
   {
     id: 'cheapshark-deals',
     name: 'CheapShark Game Deals',
     category: 'entertainment',
-    description: 'Digital PC game price tracker comparing Steam, GOG, Humble, Epic, and Fanatical deals.',
+    description:
+      'Digital PC game price tracker comparing Steam, GOG, Humble, Epic, and Fanatical deals.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://www.cheapshark.com/api/1.0',
     sampleEndpoint: 'https://www.cheapshark.com/api/1.0/deals?storeID=1&upperPrice=15',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'storeID', value: '1', description: '1 = Steam' },
-      { key: 'upperPrice', value: '15', description: 'Price limit ($)' }
+      { key: 'upperPrice', value: '15', description: 'Price limit ($)' },
     ],
     documentationUrl: 'https://apidocs.cheapshark.com/',
-    tags: ['gaming', 'deals', 'steam', 'discounts']
+    tags: ['gaming', 'deals', 'steam', 'discounts'],
   },
   {
     id: 'tvmaze-shows',
     name: 'TVMaze Television Database',
     category: 'entertainment',
-    description: 'TV show listings, episode summaries, cast information, air times, and streaming links.',
+    description:
+      'TV show listings, episode summaries, cast information, air times, and streaming links.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.tvmaze.com',
     sampleEndpoint: 'https://api.tvmaze.com/search/shows?q=stranger+things',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 'q', value: 'stranger things', description: 'Show name query' }
-    ],
+    defaultParams: [{ key: 'q', value: 'stranger things', description: 'Show name query' }],
     documentationUrl: 'https://www.tvmaze.com/api',
-    tags: ['tv', 'shows', 'episodes', 'movies']
+    tags: ['tv', 'shows', 'episodes', 'movies'],
   },
   {
     id: 'dnd5e-spells',
     name: 'Dungeons & Dragons 5e SRD',
     category: 'entertainment',
-    description: 'D&D 5th Edition SRD API covering spells, monsters, classes, conditions, and magic items.',
+    description:
+      'D&D 5th Edition SRD API covering spells, monsters, classes, conditions, and magic items.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://www.dnd5eapi.co/api',
     sampleEndpoint: 'https://www.dnd5eapi.co/api/spells/fireball',
     defaultMethod: 'GET',
     documentationUrl: 'https://www.dnd5eapi.co/docs/',
-    tags: ['dnd', 'rpg', 'spells', 'tabletop']
+    tags: ['dnd', 'rpg', 'spells', 'tabletop'],
   },
 
   // ==========================================
@@ -689,43 +732,46 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'dog-ceo',
     name: 'Dog CEO Image API',
     category: 'animals',
-    description: 'Collection of over 20,000 high-resolution dog pictures grouped by breeds and sub-breeds.',
+    description:
+      'Collection of over 20,000 high-resolution dog pictures grouped by breeds and sub-breeds.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://dog.ceo/api',
     sampleEndpoint: 'https://dog.ceo/api/breeds/image/random',
     defaultMethod: 'GET',
     documentationUrl: 'https://dog.ceo/dog-api/',
-    tags: ['dogs', 'animals', 'images', 'breeds']
+    tags: ['dogs', 'animals', 'images', 'breeds'],
   },
   {
     id: 'cat-facts',
     name: 'Cat Facts API',
     category: 'animals',
-    description: 'Daily facts and trivia regarding feline biology, behavior, domestication, and history.',
+    description:
+      'Daily facts and trivia regarding feline biology, behavior, domestication, and history.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://catfact.ninja',
     sampleEndpoint: 'https://catfact.ninja/fact',
     defaultMethod: 'GET',
     documentationUrl: 'https://catfact.ninja/',
-    tags: ['cats', 'animals', 'facts', 'trivia']
+    tags: ['cats', 'animals', 'facts', 'trivia'],
   },
   {
     id: 'thecatapi-random',
     name: 'TheCatAPI Photos',
     category: 'animals',
-    description: 'Curated high quality cat photography with breed metadata, dimensions, and categories.',
+    description:
+      'Curated high quality cat photography with breed metadata, dimensions, and categories.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.thecatapi.com/v1',
     sampleEndpoint: 'https://api.thecatapi.com/v1/images/search',
     defaultMethod: 'GET',
     documentationUrl: 'https://docs.thecatapi.com/',
-    tags: ['cats', 'images', 'animals', 'pets']
+    tags: ['cats', 'images', 'animals', 'pets'],
   },
   {
     id: 'thedogapi-random',
@@ -734,12 +780,12 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Random dog images and breed information database.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.thedogapi.com/v1',
     sampleEndpoint: 'https://api.thedogapi.com/v1/images/search',
     defaultMethod: 'GET',
     documentationUrl: 'https://docs.thedogapi.com/',
-    tags: ['dogs', 'images', 'animals', 'pets']
+    tags: ['dogs', 'images', 'animals', 'pets'],
   },
   {
     id: 'meowfacts',
@@ -748,12 +794,12 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Lightweight JSON response providing random cat trivia facts.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://meowfacts.herokuapp.com',
     sampleEndpoint: 'https://meowfacts.herokuapp.com/',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/wh-iterabb-it/meowfacts',
-    tags: ['cats', 'trivia', 'facts']
+    tags: ['cats', 'trivia', 'facts'],
   },
 
   // ==========================================
@@ -766,12 +812,12 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Random slips of practical advice and wisdom in simple JSON payload format.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.adviceslip.com',
     sampleEndpoint: 'https://api.adviceslip.com/advice',
     defaultMethod: 'GET',
     documentationUrl: 'https://api.adviceslip.com/',
-    tags: ['advice', 'quotes', 'random']
+    tags: ['advice', 'quotes', 'random'],
   },
   {
     id: 'official-joke',
@@ -780,12 +826,12 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Random programming and general jokes with setup and punchline fields.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://official-joke-api.appspot.com',
     sampleEndpoint: 'https://official-joke-api.appspot.com/random_joke',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/15Dkatz/official_joke_api',
-    tags: ['jokes', 'humor', 'programming']
+    tags: ['jokes', 'humor', 'programming'],
   },
   {
     id: 'zenquotes',
@@ -794,54 +840,42 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     description: 'Inspirational and motivational quotes from historical figures and thinkers.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://zenquotes.io/api',
     sampleEndpoint: 'https://zenquotes.io/api/random',
     defaultMethod: 'GET',
     documentationUrl: 'https://zenquotes.io/',
-    tags: ['quotes', 'inspirational', 'wisdom']
+    tags: ['quotes', 'inspirational', 'wisdom'],
   },
   {
     id: 'chuck-norris',
     name: 'Chuck Norris Facts',
     category: 'quotes',
-    description: 'Satirical facts and jokes about martial artist Chuck Norris across dev/animal categories.',
+    description:
+      'Satirical facts and jokes about martial artist Chuck Norris across dev/animal categories.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.chucknorris.io',
     sampleEndpoint: 'https://api.chucknorris.io/jokes/random',
     defaultMethod: 'GET',
     documentationUrl: 'https://api.chucknorris.io/',
-    tags: ['jokes', 'humor', 'memes']
+    tags: ['jokes', 'humor', 'memes'],
   },
   {
     id: 'corporate-bs',
     name: 'Corporate BS Generator',
     category: 'quotes',
-    description: 'Generates buzzword-filled corporate jargon sentences for pitch decks and placeholders.',
+    description:
+      'Generates buzzword-filled corporate jargon sentences for pitch decks and placeholders.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://corporatebs-generator.sameerkumar.website',
     sampleEndpoint: 'https://corporatebs-generator.sameerkumar.website/',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/sameerkumar18/corporate-bs-generator-api',
-    tags: ['humor', 'business', 'jargon']
-  },
-  {
-    id: 'stoic-quotes',
-    name: 'Stoic Philosophy Quotes',
-    category: 'quotes',
-    description: 'Quotes from Marcus Aurelius, Seneca, and Epictetus on resilience and wisdom.',
-    auth: 'No Auth',
-    https: true,
-    cors: 'yes',
-    baseUrl: 'https://stoic.chainsplit.org/api/v1',
-    sampleEndpoint: 'https://stoic.chainsplit.org/api/v1/quotes/random',
-    defaultMethod: 'GET',
-    documentationUrl: 'https://stoic.chainsplit.org/',
-    tags: ['stoicism', 'philosophy', 'quotes']
+    tags: ['humor', 'business', 'jargon'],
   },
 
   // ==========================================
@@ -851,60 +885,64 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'dictionary-api',
     name: 'Free Dictionary API',
     category: 'news',
-    description: 'English dictionary API providing definitions, phonetics, origins, audio pronunciation, and synonyms.',
+    description:
+      'English dictionary API providing definitions, phonetics, origins, audio pronunciation, and synonyms.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.dictionaryapi.dev/api/v2/entries/en',
     sampleEndpoint: 'https://api.dictionaryapi.dev/api/v2/entries/en/developer',
     defaultMethod: 'GET',
     documentationUrl: 'https://dictionaryapi.dev/',
-    tags: ['dictionary', 'english', 'definitions', 'linguistics']
+    tags: ['dictionary', 'english', 'definitions', 'linguistics'],
   },
   {
     id: 'hacker-news',
     name: 'Hacker News Firebase API',
     category: 'news',
-    description: 'Official Y Combinator Hacker News items, top stories, user profiles, and comments.',
+    description:
+      'Official Y Combinator Hacker News items, top stories, user profiles, and comments.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://hacker-news.firebaseio.com/v0',
     sampleEndpoint: 'https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/HackerNews/API',
-    tags: ['news', 'tech', 'ycombinator', 'firebase']
+    tags: ['news', 'tech', 'ycombinator', 'firebase'],
   },
   {
     id: 'datamuse-words',
     name: 'Datamuse Word Engine',
     category: 'news',
-    description: 'Word finding query engine for rhymes, synonyms, related terms, and phonetic matches.',
+    description:
+      'Word finding query engine for rhymes, synonyms, related terms, and phonetic matches.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.datamuse.com',
     sampleEndpoint: 'https://api.datamuse.com/words?rel_rhy=forget',
     defaultMethod: 'GET',
     defaultParams: [
-      { key: 'rel_rhy', value: 'forget', description: 'Find words that rhyme with "forget"' }
+      { key: 'rel_rhy', value: 'forget', description: 'Find words that rhyme with "forget"' },
     ],
     documentationUrl: 'https://www.datamuse.com/api/',
-    tags: ['words', 'rhymes', 'synonyms', 'dictionary']
+    tags: ['words', 'rhymes', 'synonyms', 'dictionary'],
   },
   {
     id: 'wikipedia-summary',
     name: 'Wikipedia REST Summary',
     category: 'news',
-    description: 'Clean Wikipedia page extracts, thumbnail images, description, and canonical URLs.',
+    description:
+      'Clean Wikipedia page extracts, thumbnail images, description, and canonical URLs.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://en.wikipedia.org/api/rest_v1',
     sampleEndpoint: 'https://en.wikipedia.org/api/rest_v1/page/summary/JavaScript',
     defaultMethod: 'GET',
     documentationUrl: 'https://en.wikipedia.org/api/rest_v1/',
-    tags: ['wikipedia', 'knowledge', 'encyclopedia']
+    tags: ['wikipedia', 'knowledge', 'encyclopedia'],
   },
 
   // ==========================================
@@ -914,63 +952,63 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'open-food-facts',
     name: 'Open Food Facts Database',
     category: 'food',
-    description: 'Global collaborative database of food product barcodes, nutrition grades, and ingredients.',
+    description:
+      'Global collaborative database of food product barcodes, nutrition grades, and ingredients.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://world.openfoodfacts.org/api/v0',
     sampleEndpoint: 'https://world.openfoodfacts.org/api/v0/product/737628064502.json',
     defaultMethod: 'GET',
     documentationUrl: 'https://openfoodfacts.github.io/api-documentation/',
-    tags: ['food', 'nutrition', 'barcodes', 'ingredients']
+    tags: ['food', 'nutrition', 'barcodes', 'ingredients'],
   },
   {
     id: 'themealdb-recipes',
     name: 'TheMealDB Recipe DB',
     category: 'food',
-    description: 'Crowdsourced database of global culinary recipes, ingredients, instructions, and youtube video links.',
+    description:
+      'Crowdsourced database of global culinary recipes, ingredients, instructions, and youtube video links.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://www.themealdb.com/api/json/v1/1',
     sampleEndpoint: 'https://www.themealdb.com/api/json/v1/1/search.php?s=Arrabiata',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 's', value: 'Arrabiata', description: 'Recipe query' }
-    ],
+    defaultParams: [{ key: 's', value: 'Arrabiata', description: 'Recipe query' }],
     documentationUrl: 'https://www.themealdb.com/api.php',
-    tags: ['cooking', 'recipes', 'food', 'meals']
+    tags: ['cooking', 'recipes', 'food', 'meals'],
   },
   {
     id: 'thecocktaildb-drinks',
     name: 'TheCocktailDB Recipes',
     category: 'food',
-    description: 'Cocktail and drink database detailing glass types, alcohol contents, measurements, and garnishes.',
+    description:
+      'Cocktail and drink database detailing glass types, alcohol contents, measurements, and garnishes.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://www.thecocktaildb.com/api/json/v1/1',
     sampleEndpoint: 'https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita',
     defaultMethod: 'GET',
-    defaultParams: [
-      { key: 's', value: 'margarita', description: 'Cocktail name' }
-    ],
+    defaultParams: [{ key: 's', value: 'margarita', description: 'Cocktail name' }],
     documentationUrl: 'https://www.thecocktaildb.com/api.php',
-    tags: ['drinks', 'cocktails', 'recipes', 'bartending']
+    tags: ['drinks', 'cocktails', 'recipes', 'bartending'],
   },
   {
     id: 'fruityvice-nutrition',
     name: 'Fruityvice Fruit Nutrition',
     category: 'food',
-    description: 'Nutritional facts regarding calories, fat, sugar, carbohydrates, and protein per 100g of fruit.',
+    description:
+      'Nutritional facts regarding calories, fat, sugar, carbohydrates, and protein per 100g of fruit.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://www.fruityvice.com/api',
     sampleEndpoint: 'https://www.fruityvice.com/api/fruit/banana',
     defaultMethod: 'GET',
     documentationUrl: 'https://www.fruityvice.com/',
-    tags: ['fruit', 'nutrition', 'calories', 'health']
+    tags: ['fruit', 'nutrition', 'calories', 'health'],
   },
 
   // ==========================================
@@ -980,51 +1018,58 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'open-library-search',
     name: 'Open Library Search API',
     category: 'art',
-    description: 'Internet Archive Open Library catalog covering millions of books, authors, ISBNs, and cover scans.',
+    description:
+      'Internet Archive Open Library catalog covering millions of books, authors, ISBNs, and cover scans.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://openlibrary.org',
     sampleEndpoint: 'https://openlibrary.org/search.json?q=the+lord+of+the+rings&limit=5',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'q', value: 'the lord of the rings', description: 'Book search title' },
-      { key: 'limit', value: '5', description: 'Result count' }
+      { key: 'limit', value: '5', description: 'Result count' },
     ],
     documentationUrl: 'https://openlibrary.org/dev/docs/api/search',
-    tags: ['books', 'library', 'authors', 'isbn']
+    tags: ['books', 'library', 'authors', 'isbn'],
   },
   {
     id: 'poetrydb-poems',
     name: 'PoetryDB Poem Engine',
     category: 'art',
-    description: 'Database of classical poetry searchable by title, line count, author, and full poem text.',
+    description:
+      'Database of classical poetry searchable by title, line count, author, and full poem text.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://poetrydb.org',
     sampleEndpoint: 'https://poetrydb.org/random/1',
     defaultMethod: 'GET',
     documentationUrl: 'https://github.com/thundercomb/poetrydb',
-    tags: ['poetry', 'literature', 'authors', 'poems']
+    tags: ['poetry', 'literature', 'authors', 'poems'],
   },
   {
     id: 'harvard-art-museums',
     name: 'Harvard Art Museums Catalog',
     category: 'art',
-    description: 'Explores over 250,000 museum art objects, paintings, prints, sculptures, and exhibition histories.',
+    description:
+      'Explores over 250,000 museum art objects, paintings, prints, sculptures, and exhibition histories.',
     auth: 'API Key',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.harvardartmuseums.org',
-    sampleEndpoint: 'https://api.harvardartmuseums.org/object?apikey=c176e017-d576-46c5-a226-5a415ff632e8&size=3',
+    sampleEndpoint: 'https://api.harvardartmuseums.org/object?size=3',
     defaultMethod: 'GET',
     defaultParams: [
-      { key: 'apikey', value: 'c176e017-d576-46c5-a226-5a415ff632e8', description: 'Public Demo Key' },
-      { key: 'size', value: '3', description: 'Item count' }
+      {
+        key: 'apikey',
+        value: '',
+        description: 'Your Harvard Art Museums key — request one at the docs link',
+      },
+      { key: 'size', value: '3', description: 'Item count' },
     ],
     documentationUrl: 'https://github.com/harvardartmuseums/api-docs',
-    tags: ['art', 'museum', 'paintings', 'history']
+    tags: ['art', 'museum', 'paintings', 'history'],
   },
 
   // ==========================================
@@ -1034,46 +1079,50 @@ export const PUBLIC_APIS: PublicApiItem[] = [
     id: 'teleport-urban',
     name: 'Teleport Quality of Life',
     category: 'geo',
-    description: 'City quality of life scores including cost of living, safety, healthcare, pollution, and climate.',
+    description:
+      'City quality of life scores including cost of living, safety, healthcare, pollution, and climate.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.teleport.org/api',
     sampleEndpoint: 'https://api.teleport.org/api/urban_areas/slug:san-francisco-bay-area/scores/',
     defaultMethod: 'GET',
     documentationUrl: 'https://developers.teleport.org/',
-    tags: ['cities', 'living', 'quality-of-life', 'travel']
+    tags: ['cities', 'living', 'quality-of-life', 'travel'],
   },
   {
     id: 'zippopotam-us',
     name: 'Zippopotam.us Postal Code',
     category: 'geo',
-    description: 'Zip code and postal code lookup for city, state, latitude, and longitude coordinates worldwide.',
+    description:
+      'Zip code and postal code lookup for city, state, latitude, and longitude coordinates worldwide.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.zippopotam.us',
     sampleEndpoint: 'https://api.zippopotam.us/us/90210',
     defaultMethod: 'GET',
     documentationUrl: 'https://www.zippopotam.us/',
-    tags: ['zipcode', 'geography', 'postal', 'location']
+    tags: ['zipcode', 'geography', 'postal', 'location'],
   },
   {
     id: 'bigdatacloud-geocode',
     name: 'BigDataCloud Geocoding',
     category: 'geo',
-    description: 'Client-side reverse geocoding providing human readable city, district, and country from lat/lng.',
+    description:
+      'Client-side reverse geocoding providing human readable city, district, and country from lat/lng.',
     auth: 'No Auth',
     https: true,
-    cors: 'yes',
+    cors: 'unknown',
     baseUrl: 'https://api.bigdatacloud.net/data',
-    sampleEndpoint: 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=37.7749&longitude=-122.4194&localityLanguage=en',
+    sampleEndpoint:
+      'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=37.7749&longitude=-122.4194&localityLanguage=en',
     defaultMethod: 'GET',
     defaultParams: [
       { key: 'latitude', value: '37.7749', description: 'Latitude' },
-      { key: 'longitude', value: '-122.4194', description: 'Longitude' }
+      { key: 'longitude', value: '-122.4194', description: 'Longitude' },
     ],
     documentationUrl: 'https://www.bigdatacloud.net/docs/api/free-reverse-geocode-to-city-api',
-    tags: ['geocoding', 'maps', 'location', 'gps']
-  }
+    tags: ['geocoding', 'maps', 'location', 'gps'],
+  },
 ];

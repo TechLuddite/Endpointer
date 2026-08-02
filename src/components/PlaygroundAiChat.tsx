@@ -13,9 +13,6 @@ import {
   Trash2,
   Copy,
   Check,
-  Code2,
-  Layers,
-  ArrowRight
 } from 'lucide-react';
 import { RequestConfig, ApiResponseData, AiChatMessage } from '../types';
 
@@ -38,7 +35,7 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
       sender: 'assistant',
       text: "👋 **Welcome to AI API Copilot!**\n\nI can build queries, adjust headers/auth, parse payloads, or auto-configure the REST Playground for you. Try asking:\n- *'Build a query for getting a random pokemon'*\n- *'Search weather for Tokyo'*\n- *'Configure a POST request with a sample JSON user object'*\n- *'Set up Bearer Token authorization'*",
       timestamp: Date.now(),
-    }
+    },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,7 +55,9 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
   };
 
   // Intelligent client-side fallback if server endpoint is offline or rate limited
-  const generateClientFallback = (prompt: string): { message: string; actionSummary?: string; configUpdate?: Partial<RequestConfig> } => {
+  const generateClientFallback = (
+    prompt: string,
+  ): { message: string; actionSummary?: string; configUpdate?: Partial<RequestConfig> } => {
     const lower = prompt.toLowerCase();
 
     if (lower.includes('pokemon') || lower.includes('pokémon')) {
@@ -84,47 +83,53 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
           method: 'GET',
           url: targetUrl,
           useProxy: true,
-        }
+        },
       };
     }
 
     if (lower.includes('weather') || lower.includes('forecast')) {
       return {
-        message: "I've configured the REST Playground to fetch real-time weather metrics from Open-Meteo for Tokyo.",
-        actionSummary: "Set endpoint URL to Tokyo Weather API",
+        message:
+          "I've configured the REST Playground to fetch real-time weather metrics from Open-Meteo for Tokyo.",
+        actionSummary: 'Set endpoint URL to Tokyo Weather API',
         configUpdate: {
           method: 'GET',
           url: 'https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&current_weather=true',
           useProxy: true,
-        }
+        },
       };
     }
 
     if (lower.includes('post') || lower.includes('create') || lower.includes('payload')) {
       return {
-        message: "I've configured a POST request to JSONPlaceholder with a sample JSON payload body.",
-        actionSummary: "Set method to POST & added sample JSON body",
+        message:
+          "I've configured a POST request to JSONPlaceholder with a sample JSON payload body.",
+        actionSummary: 'Set method to POST & added sample JSON body',
         configUpdate: {
           method: 'POST',
           url: 'https://jsonplaceholder.typicode.com/posts',
           bodyType: 'json',
-          body: JSON.stringify({ title: 'Endpointer Test', body: 'AI-generated test request payload', userId: 1 }, null, 2),
+          body: JSON.stringify(
+            { title: 'Endpointer Test', body: 'AI-generated test request payload', userId: 1 },
+            null,
+            2,
+          ),
           useProxy: true,
-        }
+        },
       };
     }
 
     if (lower.includes('bearer') || lower.includes('auth') || lower.includes('token')) {
       return {
         message: "I've enabled **Bearer Token** authentication mode with a test API key.",
-        actionSummary: "Enabled Bearer Token authentication",
+        actionSummary: 'Enabled Bearer Token authentication',
         configUpdate: {
           authType: 'Bearer Token',
           authConfig: {
             ...currentConfig.authConfig,
             bearerToken: 'sk_test_endpointer_bearer_token_99812',
-          }
-        }
+          },
+        },
       };
     }
 
@@ -138,7 +143,9 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
             return `${generateTsType(obj[0], 'Item')}[]`;
           }
           if (typeof obj === 'object') {
-            const lines = Object.entries(obj).slice(0, 15).map(([k, v]) => `  ${k}: ${generateTsType(v, k)};`);
+            const lines = Object.entries(obj)
+              .slice(0, 15)
+              .map(([k, v]) => `  ${k}: ${generateTsType(v, k)};`);
             return `export interface ${name} {\n${lines.join('\n')}\n}`;
           }
           return typeof obj;
@@ -148,7 +155,7 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
 
       return {
         message: `Generated TypeScript Interface for payload:\n\n\`\`\`typescript\n${tsCode}\n\`\`\``,
-        actionSummary: "Generated TypeScript Interface",
+        actionSummary: 'Generated TypeScript Interface',
       };
     }
 
@@ -243,7 +250,8 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
   // Helper renderer to render code blocks and bold text cleanly
   const renderFormattedText = (text: string, msgId: string) => {
     const codeBlockRegex = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
-    const parts = [];
+    type Part = { type: 'text'; content: string } | { type: 'code'; lang: string; code: string };
+    const parts: Part[] = [];
     let lastIndex = 0;
     let match;
 
@@ -251,7 +259,7 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
       if (match.index > lastIndex) {
         parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
       }
-      parts.push({ type: 'code', lang: match[1] || 'text', code: match[2] });
+      parts.push({ type: 'code', lang: match[1] || 'text', code: match[2] ?? '' });
       lastIndex = match.index + match[0].length;
     }
 
@@ -265,14 +273,21 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
           if (p.type === 'code') {
             const blockId = `${msgId}-code-${idx}`;
             return (
-              <div key={blockId} className="my-2 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden font-mono text-[11px]">
+              <div
+                key={blockId}
+                className="my-2 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden font-mono text-[11px]"
+              >
                 <div className="px-3 py-1.5 bg-slate-800/60 border-b border-slate-700/60 flex items-center justify-between text-slate-400">
                   <span className="text-[10px] uppercase font-bold text-indigo-300">{p.lang}</span>
                   <button
                     onClick={() => copyToClipboard(p.code, blockId)}
                     className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white transition-colors"
                   >
-                    {copiedCodeId === blockId ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedCodeId === blockId ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                     <span>{copiedCodeId === blockId ? 'Copied' : 'Copy Code'}</span>
                   </button>
                 </div>
@@ -286,7 +301,11 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
           // Format simple bold markdown **text**
           const formattedText = p.content.split(/(\*\*.*?\*\*)/g).map((chunk, cIdx) => {
             if (chunk.startsWith('**') && chunk.endsWith('**')) {
-              return <strong key={cIdx} className="text-cyan-300 font-semibold">{chunk.slice(2, -2)}</strong>;
+              return (
+                <strong key={cIdx} className="text-cyan-300 font-semibold">
+                  {chunk.slice(2, -2)}
+                </strong>
+              );
             }
             return chunk;
           });
@@ -311,7 +330,9 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-xs text-indigo-200 tracking-wide">AI Playground Assistant</span>
+              <span className="font-bold text-xs text-indigo-200 tracking-wide">
+                AI Playground Assistant
+              </span>
               <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono">
                 Context-Aware Copilot
               </span>
@@ -336,7 +357,9 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
               onChange={(e) => setAutoExecute(e.target.checked)}
               className="rounded bg-slate-900 border-indigo-500/40 text-indigo-500 focus:ring-0 cursor-pointer"
             />
-            <Zap className={`w-3 h-3 ${autoExecute ? 'text-amber-400 fill-amber-400' : 'text-slate-500'}`} />
+            <Zap
+              className={`w-3 h-3 ${autoExecute ? 'text-amber-400 fill-amber-400' : 'text-slate-500'}`}
+            />
             <span>Auto-Send</span>
           </label>
 
@@ -370,10 +393,14 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
                 <span className="text-emerald-300 font-semibold">
                   Latest Response Context: {response.status} {response.statusText}
                 </span>
-                <span className="text-slate-400 text-[11px]">({response.timeMs}ms • {(response.sizeBytes / 1024).toFixed(1)} KB)</span>
+                <span className="text-slate-400 text-[11px]">
+                  ({response.duration}ms • {(response.sizeBytes / 1024).toFixed(1)} KB)
+                </span>
               </div>
               <button
-                onClick={() => handleSendMessage("Explain this API response payload and summarize key fields")}
+                onClick={() =>
+                  handleSendMessage('Explain this API response payload and summarize key fields')
+                }
                 className="text-[11px] text-cyan-400 hover:text-cyan-200 underline font-semibold transition-colors"
               >
                 Summarize Response →
@@ -426,13 +453,19 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
                           {msg.appliedConfig.method && (
                             <div className="flex items-center gap-2">
                               <span className="text-slate-500 uppercase font-bold">Method:</span>
-                              <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 font-bold">{msg.appliedConfig.method}</span>
+                              <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 font-bold">
+                                {msg.appliedConfig.method}
+                              </span>
                             </div>
                           )}
                           {msg.appliedConfig.url && (
                             <div className="flex items-start gap-2">
-                              <span className="text-slate-500 uppercase font-bold shrink-0">URL:</span>
-                              <span className="text-cyan-200 break-all">{msg.appliedConfig.url}</span>
+                              <span className="text-slate-500 uppercase font-bold shrink-0">
+                                URL:
+                              </span>
+                              <span className="text-cyan-200 break-all">
+                                {msg.appliedConfig.url}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -452,7 +485,10 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
             {loading && (
               <div className="flex gap-2.5 items-center text-xs font-mono text-indigo-300 bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-800/40 animate-pulse">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                <span>AI Assistant is analyzing query context and generating REST Playground configuration...</span>
+                <span>
+                  AI Assistant is analyzing query context and generating REST Playground
+                  configuration...
+                </span>
               </div>
             )}
             <div ref={chatBottomRef} />
@@ -460,34 +496,38 @@ export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
 
           {/* Contextual Action Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 text-[11px] scrollbar-none">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 shrink-0">Prompts:</span>
+            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 shrink-0">
+              Prompts:
+            </span>
             <button
-              onClick={() => handleSendMessage("Build a query for getting a random pokemon")}
+              onClick={() => handleSendMessage('Build a query for getting a random pokemon')}
               className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
             >
               🎲 Random Pokémon
             </button>
             <button
-              onClick={() => handleSendMessage("Build query for Pokémon Pikachu abilities")}
+              onClick={() => handleSendMessage('Build query for Pokémon Pikachu abilities')}
               className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
             >
               ⚡ Pokémon Pikachu
             </button>
             <button
-              onClick={() => handleSendMessage("Configure POST request with sample JSON payload")}
+              onClick={() => handleSendMessage('Configure POST request with sample JSON payload')}
               className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
             >
               📝 Mock POST Body
             </button>
             <button
-              onClick={() => handleSendMessage("Set Auth to Bearer Token")}
+              onClick={() => handleSendMessage('Set Auth to Bearer Token')}
               className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
             >
               🔐 Bearer Token Auth
             </button>
             {response && (
               <button
-                onClick={() => handleSendMessage("Generate a TypeScript interface from the response payload")}
+                onClick={() =>
+                  handleSendMessage('Generate a TypeScript interface from the response payload')
+                }
                 className="px-2.5 py-1 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-800/60 text-purple-200 font-mono shrink-0 transition-all active:scale-95"
               >
                 💻 Export TS Interface

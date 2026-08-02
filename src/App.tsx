@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ApiDirectory } from './components/ApiDirectory';
 import { Playground } from './components/Playground';
@@ -9,20 +9,29 @@ import { SupportModal } from './components/SupportModal';
 import { PrivacyModal } from './components/PrivacyModal';
 import { Footer } from './components/Footer';
 import { PUBLIC_APIS } from './data/publicApis';
-import { 
-  RequestConfig, ApiResponseData, HealthStatusItem, 
-  RequestHistoryItem, CollectionItem 
+import {
+  RequestConfig,
+  ApiResponseData,
+  HealthStatusItem,
+  RequestHistoryItem,
+  CollectionItem,
 } from './types';
-import { 
-  getSavedHistory, saveHistoryItem, clearHistoryStorage,
-  getSavedCollections, saveCollections,
-  getFavoriteApis, toggleFavoriteApi
+import {
+  getSavedHistory,
+  saveHistoryItem,
+  clearHistoryStorage,
+  getSavedCollections,
+  saveCollections,
+  getFavoriteApis,
+  toggleFavoriteApi,
 } from './utils/storage';
 import { buildFullUrl, buildHeadersRecord } from './utils/codeGenerators';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'directory' | 'playground' | 'monitor' | 'collections'>('directory');
-  
+  const [activeTab, setActiveTab] = useState<
+    'directory' | 'playground' | 'monitor' | 'collections'
+  >('directory');
+
   // Storage & State
   const [favorites, setFavorites] = useState<string[]>([]);
   const [history, setHistory] = useState<RequestHistoryItem[]>([]);
@@ -56,7 +65,8 @@ export default function App() {
       monitor: 'Endpointer - Real-time API Health & Status Monitor',
       collections: 'Endpointer - Saved API Collections & History',
     };
-    document.title = titleMap[activeTab] || 'Endpointer - Interactive API Directory & REST Playground';
+    document.title =
+      titleMap[activeTab] || 'Endpointer - Interactive API Directory & REST Playground';
   }, [activeTab]);
 
   const handleToggleFavorite = (id: string) => {
@@ -97,7 +107,11 @@ export default function App() {
 
       const text = await resp.text();
       let parsed: any = text;
-      if (contentType.includes('application/json') || (text.trim().startsWith('{') || text.trim().startsWith('['))) {
+      if (
+        contentType.includes('application/json') ||
+        text.trim().startsWith('{') ||
+        text.trim().startsWith('[')
+      ) {
         try {
           parsed = JSON.parse(text);
         } catch {
@@ -125,8 +139,10 @@ export default function App() {
         headers: {},
         data: {
           error: err?.message || 'Direct browser fetch failed.',
-          details: 'When hosting on GitHub Pages or static hosts, requests are executed directly in your browser. If the target API endpoint does not return CORS headers (`Access-Control-Allow-Origin: *`), browser security blocks the response.',
-          suggestion: 'Ensure the API supports CORS (e.g. Open-Meteo, PokeAPI, JSONPlaceholder, CoinGecko), or use the generated cURL/Fetch snippets in terminal or Postman.',
+          details:
+            'When hosting on GitHub Pages or static hosts, requests are executed directly in your browser. If the target API endpoint does not return CORS headers (`Access-Control-Allow-Origin: *`), browser security blocks the response.',
+          suggestion:
+            'Ensure the API supports CORS (e.g. Open-Meteo, PokeAPI, JSONPlaceholder, CoinGecko), or use the generated cURL/Fetch snippets in terminal or Postman.',
         },
         contentType: 'application/json',
         duration,
@@ -138,10 +154,13 @@ export default function App() {
   };
 
   // Direct client ping for static hosts
-  const pingDirectly = async (api: typeof PUBLIC_APIS[0]): Promise<HealthStatusItem> => {
+  const pingDirectly = async (api: (typeof PUBLIC_APIS)[0]): Promise<HealthStatusItem> => {
     const start = Date.now();
     try {
-      const resp = await fetch(api.sampleEndpoint, { method: api.defaultMethod || 'GET', mode: 'cors' });
+      const resp = await fetch(api.sampleEndpoint, {
+        method: api.defaultMethod || 'GET',
+        mode: 'cors',
+      });
       return {
         id: api.id,
         url: api.sampleEndpoint,
@@ -175,14 +194,18 @@ export default function App() {
           body: JSON.stringify({
             url: config.url,
             method: config.method,
-            params: config.params.filter(p => p.enabled && p.key).reduce((acc: any, curr) => {
-              acc[curr.key] = curr.value;
-              return acc;
-            }, {}),
-            headers: config.headers.filter(h => h.enabled && h.key).reduce((acc: any, curr) => {
-              acc[curr.key] = curr.value;
-              return acc;
-            }, {}),
+            params: config.params
+              .filter((p) => p.enabled && p.key)
+              .reduce((acc: any, curr) => {
+                acc[curr.key] = curr.value;
+                return acc;
+              }, {}),
+            headers: config.headers
+              .filter((h) => h.enabled && h.key)
+              .reduce((acc: any, curr) => {
+                acc[curr.key] = curr.value;
+                return acc;
+              }, {}),
             body: config.body,
           }),
         });
@@ -214,21 +237,23 @@ export default function App() {
   };
 
   // Quick single API ping
-  const handleQuickPing = async (api: typeof PUBLIC_APIS[0]) => {
+  const handleQuickPing = async (api: (typeof PUBLIC_APIS)[0]) => {
     const item = await pingDirectly(api);
-    setHealthMap(prev => ({ ...prev, [api.id]: item }));
+    setHealthMap((prev) => ({ ...prev, [api.id]: item }));
   };
 
   // Batch health check for Status Monitor
   const handleBatchPing = useCallback(async (selectedApis: typeof PUBLIC_APIS) => {
     const directResults = await Promise.all(selectedApis.map(pingDirectly));
     const newMap: Record<string, HealthStatusItem> = {};
-    directResults.forEach(r => { newMap[r.id] = r; });
-    setHealthMap(prev => ({ ...prev, ...newMap }));
+    directResults.forEach((r) => {
+      newMap[r.id] = r;
+    });
+    setHealthMap((prev) => ({ ...prev, ...newMap }));
   }, []);
 
   // Save to collection
-  const handleSaveToCollection = (config: RequestConfig, response?: ApiResponseData) => {
+  const handleSaveToCollection = (config: RequestConfig, _response?: ApiResponseData) => {
     const updatedCols = [...collections];
     if (updatedCols.length === 0) {
       updatedCols.push({
@@ -266,7 +291,6 @@ export default function App() {
         setActiveTab={setActiveTab}
         apiCount={PUBLIC_APIS.length}
         openAiModal={() => handleOpenAiModal()}
-        proxyActive={true}
         historyCount={history.length}
       />
 
@@ -324,16 +348,10 @@ export default function App() {
       />
 
       {/* Developer Support Modal */}
-      <SupportModal
-        isOpen={isSupportModalOpen}
-        onClose={() => setIsSupportModalOpen(false)}
-      />
+      <SupportModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
 
       {/* Privacy Policy Modal */}
-      <PrivacyModal
-        isOpen={isPrivacyModalOpen}
-        onClose={() => setIsPrivacyModalOpen(false)}
-      />
+      <PrivacyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
 
       {/* Application Footer with Support & Privacy Buttons */}
       <Footer

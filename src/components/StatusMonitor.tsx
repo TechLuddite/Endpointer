@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, CheckCircle2, XCircle, Clock, Play, Zap, ShieldAlert, BarChart3, Wifi } from 'lucide-react';
+import { Activity, RefreshCw, Clock, BarChart3 } from 'lucide-react';
 import { PublicApiItem, HealthStatusItem, RequestConfig } from '../types';
 
 interface StatusMonitorProps {
@@ -44,7 +44,10 @@ export const StatusMonitor: React.FC<StatusMonitorProps> = ({
   const failingCount = totalChecked - healthyCount;
   const avgLatency =
     totalChecked > 0
-      ? Math.round(healthItems.reduce((acc: number, h: HealthStatusItem) => acc + (h.latency || 0), 0) / totalChecked)
+      ? Math.round(
+          healthItems.reduce((acc: number, h: HealthStatusItem) => acc + (h.latency || 0), 0) /
+            totalChecked,
+        )
       : 0;
   const uptimePercent = totalChecked > 0 ? ((healthyCount / totalChecked) * 100).toFixed(1) : '100';
 
@@ -62,7 +65,8 @@ export const StatusMonitor: React.FC<StatusMonitorProps> = ({
               API Directory Health Check & Latency Monitor
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Ping public API endpoints in batch to measure real-time latency, HTTP status codes, and server availability.
+              Ping public API endpoints in batch to measure real-time latency, HTTP status codes,
+              and server availability.
             </p>
           </div>
 
@@ -76,10 +80,18 @@ export const StatusMonitor: React.FC<StatusMonitorProps> = ({
                 onChange={(e) => setAutoPollInterval(Number(e.target.value))}
                 className="bg-transparent text-cyan-400 font-semibold focus:outline-none cursor-pointer"
               >
-                <option value={0} className="bg-slate-900 text-slate-200">Manual</option>
-                <option value={15} className="bg-slate-900 text-slate-200">Every 15s</option>
-                <option value={30} className="bg-slate-900 text-slate-200">Every 30s</option>
-                <option value={60} className="bg-slate-900 text-slate-200">Every 60s</option>
+                <option value={0} className="bg-slate-900 text-slate-200">
+                  Manual
+                </option>
+                <option value={15} className="bg-slate-900 text-slate-200">
+                  Every 15s
+                </option>
+                <option value={30} className="bg-slate-900 text-slate-200">
+                  Every 30s
+                </option>
+                <option value={60} className="bg-slate-900 text-slate-200">
+                  Every 60s
+                </option>
               </select>
             </div>
 
@@ -100,19 +112,27 @@ export const StatusMonitor: React.FC<StatusMonitorProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-black text-emerald-400">{uptimePercent}%</div>
-            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">Uptime Health</div>
+            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">
+              Uptime Health
+            </div>
           </div>
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-black text-cyan-400">{avgLatency} ms</div>
-            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">Avg Latency</div>
+            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">
+              Avg Latency
+            </div>
           </div>
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-black text-emerald-300">{healthyCount}</div>
-            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">Active (200 OK)</div>
+            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">
+              Active (200 OK)
+            </div>
           </div>
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-black text-rose-400">{failingCount}</div>
-            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">Degraded / Error</div>
+            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">
+              Degraded / Error
+            </div>
           </div>
         </div>
       </div>
@@ -168,8 +188,14 @@ export const StatusMonitor: React.FC<StatusMonitorProps> = ({
                               : 'bg-rose-950 border-rose-800 text-rose-400'
                           }`}
                         >
-                          <span className={`w-2 h-2 rounded-full ${health.ok ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                          <span>{health.ok ? `${health.status} OK` : `Error (${health.status || 'Fail'})`}</span>
+                          <span
+                            className={`w-2 h-2 rounded-full ${health.ok ? 'bg-emerald-400' : 'bg-rose-400'}`}
+                          />
+                          <span>
+                            {health.ok
+                              ? `${health.status} OK`
+                              : `Error (${health.status || 'Fail'})`}
+                          </span>
                         </span>
                       ) : (
                         <span className="text-slate-500 font-mono text-[11px]">Unchecked</span>
@@ -185,8 +211,8 @@ export const StatusMonitor: React.FC<StatusMonitorProps> = ({
                                 health.latency < 200
                                   ? 'bg-emerald-400'
                                   : health.latency < 500
-                                  ? 'bg-amber-400'
-                                  : 'bg-rose-400'
+                                    ? 'bg-amber-400'
+                                    : 'bg-rose-400'
                               }`}
                               style={{ width: `${Math.min(100, (health.latency / 1000) * 100)}%` }}
                             />

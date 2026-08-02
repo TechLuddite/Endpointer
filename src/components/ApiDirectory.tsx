@@ -1,9 +1,26 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Search, Star, ExternalLink, Play, CheckCircle2, XCircle, 
-  Clock, Shield, Key, Wifi, Sparkles, Filter, 
-  CloudSun, Database, Coins, Gamepad2, Dog, Code, Quote, Newspaper, Grid,
-  Utensils, BookOpen, Globe
+import {
+  Search,
+  Star,
+  ExternalLink,
+  Play,
+  Clock,
+  Shield,
+  Key,
+  Sparkles,
+  Filter,
+  CloudSun,
+  Database,
+  Coins,
+  Gamepad2,
+  Dog,
+  Code,
+  Quote,
+  Newspaper,
+  Grid,
+  Utensils,
+  BookOpen,
+  Globe,
 } from 'lucide-react';
 import { PublicApiItem, HealthStatusItem, RequestConfig } from '../types';
 import { API_CATEGORIES } from '../data/publicApis';
@@ -123,7 +140,8 @@ export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
                 Explore & Test Public APIs Real-Time
               </h1>
               <p className="text-slate-400 text-sm max-w-2xl mt-1">
-                Browse curated REST APIs, test response payloads with zero CORS blocks, check real-time uptime health, and generate instant code snippets.
+                Browse curated REST APIs, test response payloads with zero CORS blocks, check
+                real-time uptime health, and generate instant code snippets.
               </p>
             </div>
 
@@ -131,17 +149,23 @@ export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
             <div className="flex items-center gap-3">
               <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center min-w-[100px]">
                 <div className="text-xl font-bold text-cyan-400">{apis.length}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">Total APIs</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Total APIs
+                </div>
               </div>
               <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center min-w-[100px]">
                 <div className="text-xl font-bold text-emerald-400">
                   {apis.filter((a) => a.auth === 'No Auth').length}
                 </div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">No Auth Needed</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-400">
+                  No Auth Needed
+                </div>
               </div>
               <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center min-w-[100px]">
                 <div className="text-xl font-bold text-purple-400">100%</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">HTTPS Safe</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-400">
+                  HTTPS Safe
+                </div>
               </div>
             </div>
           </div>
@@ -191,7 +215,9 @@ export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
                     : 'bg-slate-950/90 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Star className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`} />
+                <Star
+                  className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`}
+                />
                 <span>Starred ({favorites.length})</span>
               </button>
             </div>
@@ -216,7 +242,9 @@ export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
                   : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:bg-slate-900 hover:text-slate-200'
               }`}
             >
-              <IconComp className={`w-3.5 h-3.5 ${isSelected ? 'text-cyan-400' : 'text-slate-400'}`} />
+              <IconComp
+                className={`w-3.5 h-3.5 ${isSelected ? 'text-cyan-400' : 'text-slate-400'}`}
+              />
               <span>{cat.name}</span>
             </button>
           );
@@ -262,7 +290,7 @@ export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
                       <h3 className="font-bold text-base text-slate-100 group-hover:text-cyan-300 transition-colors">
                         {api.name}
                       </h3>
-                      
+
                       {/* Health Indicator Ping */}
                       {health ? (
                         <div
@@ -273,7 +301,9 @@ export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
                           }`}
                           title={`Last status: ${health.status} (${health.latency}ms)`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${health.ok ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${health.ok ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}
+                          />
                           <span>{health.ok ? `${health.latency}ms` : 'Error'}</span>
                         </div>
                       ) : (

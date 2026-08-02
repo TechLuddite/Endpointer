@@ -6,7 +6,6 @@ interface HeaderProps {
   setActiveTab: (tab: 'directory' | 'playground' | 'monitor' | 'collections') => void;
   apiCount: number;
   openAiModal: () => void;
-  proxyActive: boolean;
   historyCount: number;
 }
 
@@ -15,16 +14,20 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   apiCount,
   openAiModal,
-  proxyActive,
   historyCount,
 }) => {
   return (
-    <header id="main-header" className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 text-slate-100">
+    <header
+      id="main-header"
+      className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 text-slate-100"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('directory')}>
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => setActiveTab('directory')}
+          >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 p-0.5 shadow-lg shadow-cyan-500/20">
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
                 <Terminal className="w-5 h-5 text-cyan-400" />
@@ -39,7 +42,9 @@ export const Header: React.FC<HeaderProps> = ({
                   GitHub Pages Ready
                 </span>
               </div>
-              <p className="text-xs text-slate-400 hidden sm:block">Interactive API Playground & Health Tester</p>
+              <p className="text-xs text-slate-400 hidden sm:block">
+                Interactive API Playground & Health Tester
+              </p>
             </div>
           </div>
 
@@ -145,7 +150,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="mobile-tab-playground"
             onClick={() => setActiveTab('playground')}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
-              activeTab === 'playground' ? 'text-amber-400 font-bold bg-slate-800' : 'text-slate-400'
+              activeTab === 'playground'
+                ? 'text-amber-400 font-bold bg-slate-800'
+                : 'text-slate-400'
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
@@ -165,7 +172,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="mobile-tab-collections"
             onClick={() => setActiveTab('collections')}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
-              activeTab === 'collections' ? 'text-purple-400 font-bold bg-slate-800' : 'text-slate-400'
+              activeTab === 'collections'
+                ? 'text-purple-400 font-bold bg-slate-800'
+                : 'text-slate-400'
             }`}
           >
             <FolderGit2 className="w-3.5 h-3.5" />

@@ -1,4 +1,4 @@
-import { RequestConfig, RequestHistoryItem, CollectionItem } from '../types';
+import { RequestHistoryItem, CollectionItem } from '../types';
 
 const HISTORY_KEY = 'endpointer_request_history_v1';
 const COLLECTIONS_KEY = 'endpointer_collections_v1';
@@ -17,7 +17,7 @@ export function saveHistoryItem(item: RequestHistoryItem): RequestHistoryItem[] 
   try {
     const history = getSavedHistory();
     // Keep max 50 recent items
-    const updated = [item, ...history.filter(h => h.id !== item.id)].slice(0, 50);
+    const updated = [item, ...history.filter((h) => h.id !== item.id)].slice(0, 50);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
     return updated;
   } catch {
@@ -73,9 +73,9 @@ export function getSavedCollections(): CollectionItem[] {
               bodyType: 'none',
               body: '',
               useProxy: true,
-            }
-          ]
-        }
+            },
+          ],
+        },
       ];
       localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(initial));
       return initial;
@@ -107,7 +107,7 @@ export function toggleFavoriteApi(apiId: string): string[] {
   try {
     const favorites = getFavoriteApis();
     const updated = favorites.includes(apiId)
-      ? favorites.filter(id => id !== apiId)
+      ? favorites.filter((id) => id !== apiId)
       : [...favorites, apiId];
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
     return updated;

@@ -1,5 +1,16 @@
 import React from 'react';
-import { X, Heart, Github, ExternalLink, Star, Coffee, DollarSign, Sparkles, ShieldCheck, Bug, Building2 } from 'lucide-react';
+import {
+  X,
+  Heart,
+  Github,
+  ExternalLink,
+  Star,
+  Coffee,
+  DollarSign,
+  Sparkles,
+  ShieldCheck,
+  Building2,
+} from 'lucide-react';
 
 interface SupportModalProps {
   isOpen: boolean;
@@ -19,9 +30,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
               <Heart className="w-5 h-5 text-white fill-current" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-white tracking-wide">
-                Developer Support
-              </h3>
+              <h3 className="font-bold text-base text-white tracking-wide">Developer Support</h3>
               <p className="text-xs text-indigo-300">Support Open Source Development</p>
             </div>
           </div>
@@ -42,13 +51,17 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
               Support Endpointer & TechLuddite Projects
             </p>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Endpointer is free and open-source software built for developers. If this tool saves you time or helps your workflow, consider supporting development or starring the repository!
+              Endpointer is free and open-source software built for developers. If this tool saves
+              you time or helps your workflow, consider supporting development or starring the
+              repository!
             </p>
           </div>
 
           {/* Support Actions */}
           <div className="space-y-2.5">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Direct Support & Sponsorship</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+              Direct Support & Sponsorship
+            </span>
 
             {/* Buy Me a Coffee */}
             <a
@@ -68,7 +81,9 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                       Ko-fi / Coffee
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400">Support techluddite with a quick tip or coffee</div>
+                  <div className="text-[11px] text-slate-400">
+                    Support techluddite with a quick tip or coffee
+                  </div>
                 </div>
               </div>
               <ExternalLink className="w-4 h-4 text-amber-400/70 group-hover:text-amber-300 transition-colors" />
@@ -92,13 +107,17 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                       PayPal
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400">Direct contribution via PayPal Donate</div>
+                  <div className="text-[11px] text-slate-400">
+                    Direct contribution via PayPal Donate
+                  </div>
                 </div>
               </div>
               <ExternalLink className="w-4 h-4 text-cyan-400/70 group-hover:text-cyan-300 transition-colors" />
             </a>
 
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 pt-2 block">GitHub & Open Source</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 pt-2 block">
+              GitHub & Open Source
+            </span>
 
             {/* GitHub Repo Star */}
             <a
@@ -112,8 +131,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                   <Star className="w-4 h-4 fill-current" />
                 </div>
                 <div>
-                  <div className="font-bold text-purple-200 text-xs group-hover:text-purple-300">Star on GitHub</div>
-                  <div className="text-[11px] text-slate-400">Star TechLuddite/Endpointer on GitHub</div>
+                  <div className="font-bold text-purple-200 text-xs group-hover:text-purple-300">
+                    Star on GitHub
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Star TechLuddite/Endpointer on GitHub
+                  </div>
                 </div>
               </div>
               <ExternalLink className="w-4 h-4 text-purple-400/70 group-hover:text-purple-300 transition-colors" />
@@ -131,8 +154,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                   <Github className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-200 text-xs group-hover:text-white">GitHub @TechLuddite</div>
-                  <div className="text-[11px] text-slate-400">Explore open source repositories & projects</div>
+                  <div className="font-bold text-slate-200 text-xs group-hover:text-white">
+                    GitHub @TechLuddite
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Explore open source repositories & projects
+                  </div>
                 </div>
               </div>
               <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-colors" />
@@ -157,7 +184,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                 <span>Halo MSP</span>
                 <ExternalLink className="w-3 h-3" />
               </a>{' '}
-              <span className="text-slate-400 font-mono">(halomsp.com)</span>—helping businesses navigate safe and sensible AI and software implementations!
+              <span className="text-slate-400 font-mono">(halomsp.com)</span>—helping businesses
+              navigate safe and sensible AI and software implementations!
             </p>
 
             <p className="text-slate-300 text-xs leading-relaxed">
@@ -171,7 +199,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                 <span>Tech 2U</span>
                 <ExternalLink className="w-3 h-3" />
               </a>{' '}
-              <span className="text-slate-400 font-mono">(tech2u.com)</span>, ready to assist with any business or personal IT need with expert, reliable support.
+              <span className="text-slate-400 font-mono">(tech2u.com)</span>, ready to assist with
+              any business or personal IT need with expert, reliable support.
             </p>
           </div>
         </div>

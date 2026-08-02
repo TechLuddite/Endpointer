@@ -1,5 +1,15 @@
 import React from 'react';
-import { X, ShieldCheck, Lock, Database, EyeOff, Server, CheckCircle2, Sparkles, AlertTriangle } from 'lucide-react';
+import {
+  X,
+  ShieldCheck,
+  Lock,
+  Database,
+  EyeOff,
+  Server,
+  CheckCircle2,
+  Sparkles,
+  AlertTriangle,
+} from 'lucide-react';
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -22,7 +32,9 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <h3 className="font-bold text-base text-white tracking-wide">
                 Privacy & Data Security Policy
               </h3>
-              <p className="text-xs text-emerald-300">How Endpointer protects developer privacy & AI safety</p>
+              <p className="text-xs text-emerald-300">
+                How Endpointer protects developer privacy & AI safety
+              </p>
             </div>
           </div>
 
@@ -43,7 +55,12 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <span>100% Client-Side Local Storage</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              All saved API request collections, custom presets, favorited endpoints, and request history items are stored strictly in your browser&apos;s <code className="text-cyan-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">localStorage</code>. No collection data ever leaves your device.
+              All saved API request collections, custom presets, favorited endpoints, and request
+              history items are stored strictly in your browser&apos;s{' '}
+              <code className="text-cyan-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                localStorage
+              </code>
+              . No collection data ever leaves your device.
             </p>
           </div>
 
@@ -54,7 +71,9 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <span>CORS Proxy Transparency</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              When you execute requests via the Endpointer CORS-free proxy, HTTP payloads and headers are forwarded directly to the requested external API endpoint. The proxy server operates ephemerally without persisting request bodies, auth keys, or tokens.
+              When you execute requests via the Endpointer CORS-free proxy, HTTP payloads and
+              headers are forwarded directly to the requested external API endpoint. The proxy
+              server operates ephemerally without persisting request bodies, auth keys, or tokens.
             </p>
           </div>
 
@@ -65,12 +84,26 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <span>AI Copilot & LLM API Privacy Statement</span>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              When using the <strong className="text-indigo-300">AI API Copilot</strong> or <strong className="text-indigo-300">AI Schema Assistant</strong>, prompt text and active request contexts (such as target URLs, query parameters, or response payloads) are processed via server-side Large Language Model (LLM) APIs (<code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded border border-slate-800">Google Gemini API</code>).
+              When using the <strong className="text-indigo-300">AI API Copilot</strong> or{' '}
+              <strong className="text-indigo-300">AI Schema Assistant</strong>, prompt text and
+              active request contexts (such as target URLs, query parameters, or response payloads)
+              are processed via server-side Large Language Model (LLM) APIs (
+              <code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded border border-slate-800">
+                Google Gemini API
+              </code>
+              ).
             </p>
 
             <ul className="space-y-1.5 pl-2 text-slate-400 list-disc list-inside text-[11px]">
-              <li><strong className="text-slate-200">Stateless Processing:</strong> Endpointer servers do not log or store prompt messages or generated AI responses.</li>
-              <li><strong className="text-slate-200">Client-Side Fallback:</strong> If backend LLM services are unreachable, analysis logic executes locally inside your browser without external transmission.</li>
+              <li>
+                <strong className="text-slate-200">Stateless Processing:</strong> Endpointer servers
+                do not log or store prompt messages or generated AI responses.
+              </li>
+              <li>
+                <strong className="text-slate-200">Client-Side Fallback:</strong> If backend LLM
+                services are unreachable, analysis logic executes locally inside your browser
+                without external transmission.
+              </li>
             </ul>
 
             {/* Warning Box regarding Common LLM Concerns */}
@@ -81,13 +114,22 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               </div>
               <ul className="space-y-2 pl-1 list-disc list-inside text-amber-200/90 leading-normal">
                 <li>
-                  <strong className="text-amber-300">Sensitive Data Warning:</strong> Never send production credentials, secrets, private bearer tokens, passwords, or sensitive PII (Personally Identifiable Information) in AI prompts or payload contexts. Always sanitize request bodies before requesting AI analysis.
+                  <strong className="text-amber-300">Sensitive Data Warning:</strong> Never send
+                  production credentials, secrets, private bearer tokens, passwords, or sensitive
+                  PII (Personally Identifiable Information) in AI prompts or payload contexts.
+                  Always sanitize request bodies before requesting AI analysis.
                 </li>
                 <li>
-                  <strong className="text-amber-300">Third-Party LLM Processing:</strong> Prompts sent to the AI Copilot are processed by external foundation model providers (Google Gemini) according to their API data privacy policies.
+                  <strong className="text-amber-300">Third-Party LLM Processing:</strong> Prompts
+                  sent to the AI Copilot are processed by external foundation model providers
+                  (Google Gemini) according to their API data privacy policies.
                 </li>
                 <li>
-                  <strong className="text-amber-300">Hallucinations & Verification:</strong> AI-generated request parameters, headers, mock JSON payloads, and TypeScript types are probabilistically constructed. Always review and test AI suggestions before deploying or executing them against sensitive databases or live production systems.
+                  <strong className="text-amber-300">Hallucinations & Verification:</strong>{' '}
+                  AI-generated request parameters, headers, mock JSON payloads, and TypeScript types
+                  are probabilistically constructed. Always review and test AI suggestions before
+                  deploying or executing them against sensitive databases or live production
+                  systems.
                 </li>
               </ul>
             </div>
@@ -100,7 +142,8 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <span>No Tracking or Telemetry</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Endpointer contains zero analytics scripts, no user tracking cookies, and no telemetry services. Your debugging sessions remain completely private.
+              Endpointer contains zero analytics scripts, no user tracking cookies, and no telemetry
+              services. Your debugging sessions remain completely private.
             </p>
           </div>
 
@@ -111,7 +154,8 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
               <span>API Key Protection</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Any custom API keys or Bearer tokens configured in the REST Playground are kept in runtime memory or local storage. Never commit sensitive keys to shared presets.
+              Any custom API keys or Bearer tokens configured in the REST Playground are kept in
+              runtime memory or local storage. Never commit sensitive keys to shared presets.
             </p>
           </div>
         </div>

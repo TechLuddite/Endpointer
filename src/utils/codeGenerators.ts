@@ -3,7 +3,7 @@ import { RequestConfig, CodeLanguage } from '../types';
 export function buildFullUrl(config: RequestConfig): string {
   try {
     const urlObj = new URL(config.url);
-    
+
     // Add enabled query params
     config.params.forEach((param) => {
       if (param.enabled && param.key) {
@@ -12,7 +12,11 @@ export function buildFullUrl(config: RequestConfig): string {
     });
 
     // Add API key query param if configured
-    if (config.authType === 'API Key' && config.authConfig.apiKeyIn === 'query' && config.authConfig.apiKeyName) {
+    if (
+      config.authType === 'API Key' &&
+      config.authConfig.apiKeyIn === 'query' &&
+      config.authConfig.apiKeyName
+    ) {
       urlObj.searchParams.append(config.authConfig.apiKeyName, config.authConfig.apiKeyValue || '');
     }
 
@@ -33,15 +37,29 @@ export function buildHeadersRecord(config: RequestConfig): Record<string, string
 
   if (config.authType === 'Bearer Token' && config.authConfig.bearerToken) {
     headers['Authorization'] = `Bearer ${config.authConfig.bearerToken}`;
-  } else if (config.authType === 'API Key' && config.authConfig.apiKeyIn === 'header' && config.authConfig.apiKeyName) {
+  } else if (
+    config.authType === 'API Key' &&
+    config.authConfig.apiKeyIn === 'header' &&
+    config.authConfig.apiKeyName
+  ) {
     headers[config.authConfig.apiKeyName] = config.authConfig.apiKeyValue || '';
   } else if (config.authType === 'Basic Auth' && config.authConfig.basicUsername) {
     const credentials = `${config.authConfig.basicUsername}:${config.authConfig.basicPassword || ''}`;
-    const encoded = typeof btoa !== 'undefined' ? btoa(credentials) : (typeof Buffer !== 'undefined' ? Buffer.from(credentials).toString('base64') : '');
+    const encoded =
+      typeof btoa !== 'undefined'
+        ? btoa(credentials)
+        : typeof Buffer !== 'undefined'
+          ? Buffer.from(credentials).toString('base64')
+          : '';
     headers['Authorization'] = `Basic ${encoded}`;
   }
 
-  if (config.bodyType === 'json' && config.body && !headers['Content-Type'] && !headers['content-type']) {
+  if (
+    config.bodyType === 'json' &&
+    config.body &&
+    !headers['Content-Type'] &&
+    !headers['content-type']
+  ) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -51,7 +69,8 @@ export function buildHeadersRecord(config: RequestConfig): Record<string, string
 export function generateCodeSnippet(config: RequestConfig, language: CodeLanguage): string {
   const fullUrl = buildFullUrl(config);
   const headers = buildHeadersRecord(config);
-  const hasBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method) && Boolean(config.body);
+  const hasBody =
+    ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method) && Boolean(config.body);
 
   switch (language) {
     case 'fetch': {

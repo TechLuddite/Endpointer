@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, X, Send, Copy, Check, Code, HelpCircle, RefreshCw } from 'lucide-react';
+import { Sparkles, X, Copy, Check, RefreshCw } from 'lucide-react';
 
 interface AiAssistantModalProps {
   isOpen: boolean;
@@ -10,8 +10,12 @@ interface AiAssistantModalProps {
 
 function generateClientSideAnalysis(prompt: string, context: any): string {
   const json = typeof context === 'object' ? context : { data: context };
-  
-  if (prompt.toLowerCase().includes('interface') || prompt.toLowerCase().includes('typescript') || prompt.toLowerCase().includes('type')) {
+
+  if (
+    prompt.toLowerCase().includes('interface') ||
+    prompt.toLowerCase().includes('typescript') ||
+    prompt.toLowerCase().includes('type')
+  ) {
     const generateTsType = (obj: any, name = 'ApiResponse'): string => {
       if (obj === null) return 'null';
       if (Array.isArray(obj)) {
@@ -33,7 +37,10 @@ function generateClientSideAnalysis(prompt: string, context: any): string {
 
   if (prompt.toLowerCase().includes('explain') || prompt.toLowerCase().includes('field')) {
     const fields = Object.keys(json || {});
-    const explanations = fields.map(f => `- ${f}: (${typeof json[f]}) field representing ${f.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+    const explanations = fields.map(
+      (f) =>
+        `- ${f}: (${typeof json[f]}) field representing ${f.replace(/([A-Z])/g, ' $1').toLowerCase()}`,
+    );
     return `// JSON Payload Field Analysis (Client-Side Mode)\n\nDetected ${fields.length} top-level fields:\n\n${explanations.join('\n')}`;
   }
 
@@ -47,9 +54,12 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
   initialContext,
 }) => {
   const [prompt, setPrompt] = useState(
-    initialPrompt || 'Analyze this payload, list key data fields, and generate a TypeScript interface for it.'
+    initialPrompt ||
+      'Analyze this payload, list key data fields, and generate a TypeScript interface for it.',
   );
-  const [context, setContext] = useState<any>(initialContext || { sample: 'Select an API response in Playground to analyze' });
+  const [context, setContext] = useState<any>(
+    initialContext || { sample: 'Select an API response in Playground to analyze' },
+  );
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>('');
   const [copied, setCopied] = useState(false);
@@ -97,7 +107,6 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative overflow-hidden">
-        
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
@@ -110,7 +119,10 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg bg-slate-950">
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg bg-slate-950"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -120,19 +132,25 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
           <label className="text-xs font-mono text-slate-400">Analysis Prompt:</label>
           <div className="flex flex-wrap gap-1.5 text-xs">
             <button
-              onClick={() => setPrompt('Generate a clean TypeScript type interface for this payload.')}
+              onClick={() =>
+                setPrompt('Generate a clean TypeScript type interface for this payload.')
+              }
               className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
             >
               TypeScript Interfaces
             </button>
             <button
-              onClick={() => setPrompt('Explain what each key field in this JSON response represents.')}
+              onClick={() =>
+                setPrompt('Explain what each key field in this JSON response represents.')
+              }
               className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
             >
               Field Explanations
             </button>
             <button
-              onClick={() => setPrompt('Suggest 5 test cases and edge conditions for testing this API endpoint.')}
+              onClick={() =>
+                setPrompt('Suggest 5 test cases and edge conditions for testing this API endpoint.')
+              }
               className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
             >
               Test Case Ideas
@@ -182,7 +200,11 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
                 onClick={handleCopy}
                 className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-semibold"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
@@ -191,7 +213,6 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
             </pre>
           </div>
         )}
-
       </div>
     </div>
   );

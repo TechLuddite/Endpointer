@@ -65,7 +65,7 @@ app.post("/api/proxy", async (req: Request, res: Response) => {
       signal: controller.signal,
     };
 
-    if (["POST", "PUT", "PATCH", "DELETE"].includes(options.method) && body !== undefined && body !== null) {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(options.method ?? "") && body !== undefined && body !== null) {
       if (typeof body === "object") {
         options.body = JSON.stringify(body);
         if (!forwardHeaders["content-type"] && !forwardHeaders["Content-Type"]) {

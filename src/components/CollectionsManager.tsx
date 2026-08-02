@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderGit2, History, Play, Trash2, Download, Upload, Plus, FileJson, Check, Database } from 'lucide-react';
+import { FolderGit2, History, Trash2, Download, Upload, Plus, Check } from 'lucide-react';
 import { CollectionItem, RequestHistoryItem, RequestConfig } from '../types';
 
 interface CollectionsManagerProps {
@@ -41,7 +41,8 @@ export const CollectionsManager: React.FC<CollectionsManagerProps> = ({
   };
 
   const handleExportCollections = () => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(collections, null, 2));
+    const dataStr =
+      'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(collections, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
     downloadAnchor.setAttribute('download', `endpointer_collections_${Date.now()}.json`);
@@ -129,7 +130,12 @@ export const CollectionsManager: React.FC<CollectionsManagerProps> = ({
           >
             <Upload className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Import</span>
-            <input type="file" accept=".json" onChange={handleImportCollections} className="hidden" />
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportCollections}
+              className="hidden"
+            />
           </label>
         </div>
       </div>
@@ -158,7 +164,9 @@ export const CollectionsManager: React.FC<CollectionsManagerProps> = ({
           {/* Create Modal */}
           {showCreateColModal && (
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
-              <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">Create New Collection</h4>
+              <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">
+                Create New Collection
+              </h4>
               <input
                 type="text"
                 value={newColName}
@@ -187,12 +195,17 @@ export const CollectionsManager: React.FC<CollectionsManagerProps> = ({
             <div className="text-center py-16 bg-slate-900/60 border border-slate-800 rounded-2xl text-slate-500 space-y-2">
               <FolderGit2 className="w-10 h-10 text-slate-700 mx-auto" />
               <p className="text-sm font-bold text-slate-400">No Saved Collections</p>
-              <p className="text-xs text-slate-600">Create a collection above or save requests from the REST Playground.</p>
+              <p className="text-xs text-slate-600">
+                Create a collection above or save requests from the REST Playground.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {collections.map((col) => (
-                <div key={col.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div
+                  key={col.id}
+                  className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <FolderGit2 className="w-4 h-4 text-purple-400" />
@@ -209,9 +222,13 @@ export const CollectionsManager: React.FC<CollectionsManagerProps> = ({
                   <p className="text-xs text-slate-400">{col.description || 'Saved collection'}</p>
 
                   <div className="space-y-2 pt-2 border-t border-slate-800">
-                    <span className="text-[11px] font-mono text-slate-500 uppercase">Requests ({col.requests.length}):</span>
+                    <span className="text-[11px] font-mono text-slate-500 uppercase">
+                      Requests ({col.requests.length}):
+                    </span>
                     {col.requests.length === 0 ? (
-                      <p className="text-xs text-slate-600 italic">No requests in this collection yet.</p>
+                      <p className="text-xs text-slate-600 italic">
+                        No requests in this collection yet.
+                      </p>
                     ) : (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {col.requests.map((req, idx) => (
@@ -263,7 +280,9 @@ export const CollectionsManager: React.FC<CollectionsManagerProps> = ({
             <div className="text-center py-16 text-slate-500 space-y-2">
               <History className="w-10 h-10 text-slate-700 mx-auto" />
               <p className="text-sm font-bold text-slate-400">No Execution History</p>
-              <p className="text-xs text-slate-600">Send requests in the Playground to record execution history.</p>
+              <p className="text-xs text-slate-600">
+                Send requests in the Playground to record execution history.
+              </p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">

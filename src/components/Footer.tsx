@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, ShieldCheck, Github, Sparkles, Terminal } from 'lucide-react';
+import { Heart, ShieldCheck, Github, Terminal } from 'lucide-react';
 
 interface FooterProps {
   onOpenSupport: () => void;
@@ -22,7 +22,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenSupport, onOpenPrivacy }) 
                 Static & GH Pages
               </span>
             </div>
-            <p className="text-[11px] text-slate-500">Interactive API Playground & Real-Time Health Tester</p>
+            <p className="text-[11px] text-slate-500">
+              Interactive API Playground & Real-Time Health Tester
+            </p>
           </div>
         </div>
 
