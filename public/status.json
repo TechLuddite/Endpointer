@@ -1,6 +1,1380 @@
 {
   "version": 1,
-  "generatedAt": "1970-01-01T00:00:00.000Z",
-  "summary": { "total": 0, "healthy": 0, "failing": 0, "browserUsable": 0, "needsProxy": 0 },
-  "entries": []
+  "generatedAt": "2026-08-02T06:54:51.444Z",
+  "summary": {
+    "total": 62,
+    "healthy": 51,
+    "failing": 11,
+    "browserUsable": 53,
+    "needsProxy": 2
+  },
+  "entries": [
+    {
+      "id": "open-meteo",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true",
+      "ok": true,
+      "status": 200,
+      "latency": 600,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 600,
+      "p95Latency": 600,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 600
+        }
+      ]
+    },
+    {
+      "id": "wttr-in",
+      "url": "https://wttr.in/London?format=j1",
+      "ok": true,
+      "status": 200,
+      "latency": 731,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 731,
+      "p95Latency": 731,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 731
+        }
+      ]
+    },
+    {
+      "id": "nws-weather",
+      "url": "https://api.weather.gov/gridpoints/TOP/31,80/forecast",
+      "ok": true,
+      "status": 200,
+      "latency": 262,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 262,
+      "p95Latency": 262,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 262
+        }
+      ]
+    },
+    {
+      "id": "openaq-air",
+      "url": "https://api.openaq.org/v2/latest?limit=5",
+      "ok": false,
+      "status": 410,
+      "latency": 101,
+      "cors": "no",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 410,
+          "latency": 101
+        }
+      ]
+    },
+    {
+      "id": "sunrise-sunset",
+      "url": "https://api.sunrise-sunset.org/json?lat=37.7749&lng=-122.4194&date=today",
+      "ok": true,
+      "status": 200,
+      "latency": 237,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 237,
+      "p95Latency": 237,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 237
+        }
+      ]
+    },
+    {
+      "id": "coingecko",
+      "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd,eur&include_24hr_change=true",
+      "ok": true,
+      "status": 200,
+      "latency": 296,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 296,
+      "p95Latency": 296,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 296
+        }
+      ]
+    },
+    {
+      "id": "frankfurter",
+      "url": "https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CAD",
+      "ok": true,
+      "status": 200,
+      "latency": 739,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 739,
+      "p95Latency": 739,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 739
+        }
+      ]
+    },
+    {
+      "id": "exchangerate-api",
+      "url": "https://open.er-api.com/v6/latest/USD",
+      "ok": true,
+      "status": 200,
+      "latency": 155,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 155,
+      "p95Latency": 155,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 155
+        }
+      ]
+    },
+    {
+      "id": "mempool-space",
+      "url": "https://mempool.space/api/v1/fees/recommended",
+      "ok": true,
+      "status": 200,
+      "latency": 472,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 472,
+      "p95Latency": 472,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 472
+        }
+      ]
+    },
+    {
+      "id": "ip-api",
+      "url": "https://ipapi.co/json/",
+      "ok": true,
+      "status": 200,
+      "latency": 158,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 158,
+      "p95Latency": 158,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 158
+        }
+      ]
+    },
+    {
+      "id": "ipify-ip",
+      "url": "https://api.ipify.org?format=json",
+      "ok": true,
+      "status": 200,
+      "latency": 139,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 139,
+      "p95Latency": 139,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 139
+        }
+      ]
+    },
+    {
+      "id": "json-placeholder",
+      "url": "https://jsonplaceholder.typicode.com/posts/1",
+      "ok": true,
+      "status": 200,
+      "latency": 301,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 301,
+      "p95Latency": 301,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 301
+        }
+      ]
+    },
+    {
+      "id": "json-placeholder-todos",
+      "url": "https://jsonplaceholder.typicode.com/todos?_limit=5",
+      "ok": true,
+      "status": 200,
+      "latency": 269,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 269,
+      "p95Latency": 269,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 269
+        }
+      ]
+    },
+    {
+      "id": "httpbin",
+      "url": "https://httpbin.org/get?sample=value",
+      "ok": false,
+      "status": 0,
+      "latency": 15002,
+      "cors": "unknown",
+      "error": "Timeout",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 0,
+          "latency": 15002
+        }
+      ]
+    },
+    {
+      "id": "dummyjson-products",
+      "url": "https://dummyjson.com/products/1",
+      "ok": true,
+      "status": 200,
+      "latency": 787,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 787,
+      "p95Latency": 787,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 787
+        }
+      ]
+    },
+    {
+      "id": "reqres-in",
+      "url": "https://reqres.in/api/users?page=1",
+      "ok": false,
+      "status": 401,
+      "latency": 358,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 401,
+          "latency": 358
+        }
+      ]
+    },
+    {
+      "id": "random-user",
+      "url": "https://randomuser.me/api/?results=3",
+      "ok": true,
+      "status": 200,
+      "latency": 304,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 304,
+      "p95Latency": 304,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 304
+        }
+      ]
+    },
+    {
+      "id": "agify-io",
+      "url": "https://api.agify.io/?name=michael",
+      "ok": true,
+      "status": 200,
+      "latency": 674,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 674,
+      "p95Latency": 674,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 674
+        }
+      ]
+    },
+    {
+      "id": "genderize-io",
+      "url": "https://api.genderize.io/?name=lucy",
+      "ok": true,
+      "status": 200,
+      "latency": 711,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 711,
+      "p95Latency": 711,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 711
+        }
+      ]
+    },
+    {
+      "id": "nationalize-io",
+      "url": "https://api.nationalize.io/?name=nathan",
+      "ok": true,
+      "status": 200,
+      "latency": 660,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 660,
+      "p95Latency": 660,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 660
+        }
+      ]
+    },
+    {
+      "id": "github-users",
+      "url": "https://api.github.com/users/octocat",
+      "ok": true,
+      "status": 200,
+      "latency": 430,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 430,
+      "p95Latency": 430,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 430
+        }
+      ]
+    },
+    {
+      "id": "github-repos",
+      "url": "https://api.github.com/users/octocat/repos?per_page=5",
+      "ok": true,
+      "status": 200,
+      "latency": 246,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 246,
+      "p95Latency": 246,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 246
+        }
+      ]
+    },
+    {
+      "id": "nasa-apod",
+      "url": "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY",
+      "ok": false,
+      "status": 0,
+      "latency": 15000,
+      "cors": "unknown",
+      "error": "Timeout",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 0,
+          "latency": 15000
+        }
+      ]
+    },
+    {
+      "id": "nasa-mars-rover",
+      "url": "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=1000&page=1&api_key=DEMO_KEY",
+      "ok": false,
+      "status": 404,
+      "latency": 456,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 404,
+          "latency": 456
+        }
+      ]
+    },
+    {
+      "id": "rest-countries",
+      "url": "https://restcountries.com/v3.1/name/japan",
+      "ok": true,
+      "status": 200,
+      "latency": 256,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 256,
+      "p95Latency": 256,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 256
+        }
+      ]
+    },
+    {
+      "id": "rest-countries-region",
+      "url": "https://restcountries.com/v3.1/region/europe",
+      "ok": true,
+      "status": 200,
+      "latency": 84,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 84,
+      "p95Latency": 84,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 84
+        }
+      ]
+    },
+    {
+      "id": "usgs-earthquake",
+      "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2024-01-01&minmagnitude=5",
+      "ok": true,
+      "status": 200,
+      "latency": 2119,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 2119,
+      "p95Latency": 2119,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 2119
+        }
+      ]
+    },
+    {
+      "id": "worldbank-data",
+      "url": "https://api.worldbank.org/v2/country/USA?format=json",
+      "ok": true,
+      "status": 200,
+      "latency": 176,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 176,
+      "p95Latency": 176,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 176
+        }
+      ]
+    },
+    {
+      "id": "spacex-launches",
+      "url": "https://api.spacexdata.com/v4/launches/latest",
+      "ok": false,
+      "status": 525,
+      "latency": 262,
+      "cors": "no",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 525,
+          "latency": 262
+        }
+      ]
+    },
+    {
+      "id": "spacex-rockets",
+      "url": "https://api.spacexdata.com/v4/rockets",
+      "ok": false,
+      "status": 525,
+      "latency": 405,
+      "cors": "no",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 525,
+          "latency": 405
+        }
+      ]
+    },
+    {
+      "id": "pokeapi",
+      "url": "https://pokeapi.co/api/v2/pokemon/pikachu",
+      "ok": true,
+      "status": 200,
+      "latency": 112,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 112,
+      "p95Latency": 112,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 112
+        }
+      ]
+    },
+    {
+      "id": "pokeapi-ability",
+      "url": "https://pokeapi.co/api/v2/ability/1",
+      "ok": true,
+      "status": 200,
+      "latency": 274,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 274,
+      "p95Latency": 274,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 274
+        }
+      ]
+    },
+    {
+      "id": "jikan-anime",
+      "url": "https://api.jikan.moe/v4/anime?q=naruto&limit=5",
+      "ok": false,
+      "status": 504,
+      "latency": 505,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 504,
+          "latency": 505
+        }
+      ]
+    },
+    {
+      "id": "deck-of-cards",
+      "url": "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1",
+      "ok": true,
+      "status": 200,
+      "latency": 273,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 273,
+      "p95Latency": 273,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 273
+        }
+      ]
+    },
+    {
+      "id": "open-trivia-db",
+      "url": "https://opentdb.com/api.php?amount=5&category=18&type=multiple",
+      "ok": true,
+      "status": 200,
+      "latency": 269,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 269,
+      "p95Latency": 269,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 269
+        }
+      ]
+    },
+    {
+      "id": "cheapshark-deals",
+      "url": "https://www.cheapshark.com/api/1.0/deals?storeID=1&upperPrice=15",
+      "ok": true,
+      "status": 200,
+      "latency": 615,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 615,
+      "p95Latency": 615,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 615
+        }
+      ]
+    },
+    {
+      "id": "tvmaze-shows",
+      "url": "https://api.tvmaze.com/search/shows?q=stranger+things",
+      "ok": true,
+      "status": 200,
+      "latency": 503,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 503,
+      "p95Latency": 503,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 503
+        }
+      ]
+    },
+    {
+      "id": "dnd5e-spells",
+      "url": "https://www.dnd5eapi.co/api/spells/fireball",
+      "ok": true,
+      "status": 200,
+      "latency": 401,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 401,
+      "p95Latency": 401,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 401
+        }
+      ]
+    },
+    {
+      "id": "dog-ceo",
+      "url": "https://dog.ceo/api/breeds/image/random",
+      "ok": true,
+      "status": 200,
+      "latency": 379,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 379,
+      "p95Latency": 379,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 379
+        }
+      ]
+    },
+    {
+      "id": "cat-facts",
+      "url": "https://catfact.ninja/fact",
+      "ok": true,
+      "status": 200,
+      "latency": 383,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 383,
+      "p95Latency": 383,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 383
+        }
+      ]
+    },
+    {
+      "id": "thecatapi-random",
+      "url": "https://api.thecatapi.com/v1/images/search",
+      "ok": true,
+      "status": 200,
+      "latency": 231,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 231,
+      "p95Latency": 231,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 231
+        }
+      ]
+    },
+    {
+      "id": "thedogapi-random",
+      "url": "https://api.thedogapi.com/v1/images/search",
+      "ok": true,
+      "status": 200,
+      "latency": 307,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 307,
+      "p95Latency": 307,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 307
+        }
+      ]
+    },
+    {
+      "id": "meowfacts",
+      "url": "https://meowfacts.herokuapp.com/",
+      "ok": true,
+      "status": 200,
+      "latency": 244,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 244,
+      "p95Latency": 244,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 244
+        }
+      ]
+    },
+    {
+      "id": "advice-slip",
+      "url": "https://api.adviceslip.com/advice",
+      "ok": true,
+      "status": 200,
+      "latency": 2041,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 2041,
+      "p95Latency": 2041,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 2041
+        }
+      ]
+    },
+    {
+      "id": "official-joke",
+      "url": "https://official-joke-api.appspot.com/random_joke",
+      "ok": true,
+      "status": 200,
+      "latency": 100,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 100,
+      "p95Latency": 100,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 100
+        }
+      ]
+    },
+    {
+      "id": "zenquotes",
+      "url": "https://zenquotes.io/api/random",
+      "ok": true,
+      "status": 200,
+      "latency": 1938,
+      "cors": "no",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 1938,
+      "p95Latency": 1938,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 1938
+        }
+      ]
+    },
+    {
+      "id": "chuck-norris",
+      "url": "https://api.chucknorris.io/jokes/random",
+      "ok": true,
+      "status": 200,
+      "latency": 801,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 801,
+      "p95Latency": 801,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 801
+        }
+      ]
+    },
+    {
+      "id": "corporate-bs",
+      "url": "https://corporatebs-generator.sameerkumar.website/",
+      "ok": true,
+      "status": 200,
+      "latency": 185,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 185,
+      "p95Latency": 185,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 185
+        }
+      ]
+    },
+    {
+      "id": "dictionary-api",
+      "url": "https://api.dictionaryapi.dev/api/v2/entries/en/developer",
+      "ok": false,
+      "status": 502,
+      "latency": 301,
+      "cors": "no",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 502,
+          "latency": 301
+        }
+      ]
+    },
+    {
+      "id": "hacker-news",
+      "url": "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty",
+      "ok": true,
+      "status": 200,
+      "latency": 160,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 160,
+      "p95Latency": 160,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 160
+        }
+      ]
+    },
+    {
+      "id": "datamuse-words",
+      "url": "https://api.datamuse.com/words?rel_rhy=forget",
+      "ok": true,
+      "status": 200,
+      "latency": 226,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 226,
+      "p95Latency": 226,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 226
+        }
+      ]
+    },
+    {
+      "id": "wikipedia-summary",
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/JavaScript",
+      "ok": true,
+      "status": 200,
+      "latency": 90,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 90,
+      "p95Latency": 90,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 90
+        }
+      ]
+    },
+    {
+      "id": "open-food-facts",
+      "url": "https://world.openfoodfacts.org/api/v0/product/737628064502.json",
+      "ok": true,
+      "status": 200,
+      "latency": 1130,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 1130,
+      "p95Latency": 1130,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 1130
+        }
+      ]
+    },
+    {
+      "id": "themealdb-recipes",
+      "url": "https://www.themealdb.com/api/json/v1/1/search.php?s=Arrabiata",
+      "ok": true,
+      "status": 200,
+      "latency": 338,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 338,
+      "p95Latency": 338,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 338
+        }
+      ]
+    },
+    {
+      "id": "thecocktaildb-drinks",
+      "url": "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita",
+      "ok": true,
+      "status": 200,
+      "latency": 476,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 476,
+      "p95Latency": 476,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 476
+        }
+      ]
+    },
+    {
+      "id": "fruityvice-nutrition",
+      "url": "https://www.fruityvice.com/api/fruit/banana",
+      "ok": true,
+      "status": 200,
+      "latency": 674,
+      "cors": "no",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 674,
+      "p95Latency": 674,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 674
+        }
+      ]
+    },
+    {
+      "id": "open-library-search",
+      "url": "https://openlibrary.org/search.json?q=the+lord+of+the+rings&limit=5",
+      "ok": true,
+      "status": 200,
+      "latency": 1750,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 1750,
+      "p95Latency": 1750,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 1750
+        }
+      ]
+    },
+    {
+      "id": "poetrydb-poems",
+      "url": "https://poetrydb.org/random/1",
+      "ok": true,
+      "status": 200,
+      "latency": 979,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 979,
+      "p95Latency": 979,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 979
+        }
+      ]
+    },
+    {
+      "id": "harvard-art-museums",
+      "url": "https://api.harvardartmuseums.org/object?size=3",
+      "ok": false,
+      "status": 401,
+      "latency": 230,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 401,
+          "latency": 230
+        }
+      ]
+    },
+    {
+      "id": "teleport-urban",
+      "url": "https://api.teleport.org/api/urban_areas/slug:san-francisco-bay-area/scores/",
+      "ok": false,
+      "status": 0,
+      "latency": 205,
+      "cors": "unknown",
+      "error": "fetch failed",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 1,
+      "uptimePercent": 0,
+      "p50Latency": 0,
+      "p95Latency": 0,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": false,
+          "status": 0,
+          "latency": 205
+        }
+      ]
+    },
+    {
+      "id": "zippopotam-us",
+      "url": "https://api.zippopotam.us/us/90210",
+      "ok": true,
+      "status": 200,
+      "latency": 110,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 110,
+      "p95Latency": 110,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 110
+        }
+      ]
+    },
+    {
+      "id": "bigdatacloud-geocode",
+      "url": "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=37.7749&longitude=-122.4194&localityLanguage=en",
+      "ok": true,
+      "status": 200,
+      "latency": 240,
+      "cors": "yes",
+      "checkedAt": "2026-08-02T06:54:51.444Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 100,
+      "p50Latency": 240,
+      "p95Latency": 240,
+      "samples": 1,
+      "history": [
+        {
+          "t": "2026-08-02T06:54:51.444Z",
+          "ok": true,
+          "status": 200,
+          "latency": 240
+        }
+      ]
+    }
+  ]
 }
