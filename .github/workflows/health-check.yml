@@ -1,0 +1,93 @@
+name: Health check
+
+on:
+  schedule:
+    # 06:17 UTC daily. Off-the-hour so we are not in the crowd of :00 cron jobs
+    # hammering these free public APIs.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: health-check
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe the directory and publish status.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Probe every directory endpoint
+        id: probe
+        run: npm run health:check | tee /tmp/health.log
+
+      - name: Commit refreshed status
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- public/status.json; then
+            echo "No status change."
+            exit 0
+          fi
+          git add public/status.json
+          git commit -m "chore(health): refresh directory status $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Open an issue for endpoints failing repeatedly
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const status = JSON.parse(fs.readFileSync('public/status.json', 'utf8'));
+            const broken = status.entries.filter(e => e.consecutiveFailures >= 3);
+            if (broken.length === 0) return;
+
+            const title = 'Directory: endpoints failing repeated health checks';
+            const body = [
+              `${broken.length} endpoint(s) have failed 3 or more consecutive checks.`,
+              '',
+              '| API | Status | Error | Consecutive failures |',
+              '| --- | --- | --- | --- |',
+              ...broken.map(e => `| \`${e.id}\` | ${e.status || '—'} | ${e.error ?? ''} | ${e.consecutiveFailures} |`),
+              '',
+              `Last checked: ${status.generatedAt}`,
+              '',
+              'Either fix the sample endpoint in `src/data/publicApis.ts` or remove the entry.',
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'directory-health',
+            });
+
+            if (existing.data.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['directory-health'],
+              });
+            }

@@ -1,0 +1,17 @@
+name = "endpointer-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+[vars]
+# Comma-separated hostname allowlist. "*" permits any public host — private,
+# loopback, link-local and metadata addresses are refused regardless.
+# Prefer an explicit list; "*" turns this into an open forward proxy for anyone
+# who can reach the Worker.
+ALLOWED_HOSTS = "api.open-meteo.com,pokeapi.co,jsonplaceholder.typicode.com,api.coingecko.com"
+
+# Origins permitted to call the Worker. Leave empty to allow any origin.
+ALLOWED_ORIGINS = "https://endpointer.opsvibe.systems,http://localhost:3000"
+
+# Optional shared secret. If set, callers must send X-Endpointer-Key.
+# Configure with: wrangler secret put PROXY_SECRET
+# PROXY_SECRET = ""
