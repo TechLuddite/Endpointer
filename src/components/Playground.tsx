@@ -1,29 +1,61 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Play,
-  Send,
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Clock,
   Code,
   Copy,
-  Check,
+  Database,
+  FileText,
+  Link2,
+  Lock,
+  Play,
+  Plus,
+  RefreshCw,
+  Send,
   ShieldCheck,
   Sparkles,
-  Plus,
+  Terminal,
   Trash2,
-  FileText,
-  Lock,
-  Clock,
-  Database,
-  RefreshCw,
+  X,
+  XCircle,
 } from 'lucide-react';
-import { HttpMethod, AuthType, KeyValuePair, RequestConfig, ApiResponseData } from '../types';
-import { generateCodeSnippet, buildFullUrl } from '../utils/codeGenerators';
+import type {
+  ApiResponseData,
+  Assertion,
+  AssertionResult,
+  AuthType,
+  BodyType,
+  Capabilities,
+  CodeLanguage,
+  Environment,
+  HttpMethod,
+  RequestConfig,
+} from '../types';
+import { buildFullUrl, generateCodeSnippet } from '../utils/codeGenerators';
+import { displayUrl, isSendableUrl, mergeUrlIntoParams } from '../utils/requestUrl';
+import { describeAssertion, evaluateAssertions, suggestAssertions } from '../utils/assertions';
+import { buildShareUrl, hasUnshareableSecrets } from '../utils/shareLink';
+import { looksLikeCurl, parseCurl } from '../utils/curlParser';
+import { findUnresolvedInConfig, resolveEnvironment } from '../utils/variables';
+import { explainStatus } from '../utils/offlineAssistant';
+import { KeyValueTable } from './KeyValueTable';
+import { JsonViewer, ResponsePreview } from './JsonViewer';
 import { PlaygroundAiChat } from './PlaygroundAiChat';
 
 interface PlaygroundProps {
-  initialConfig?: RequestConfig | null;
-  onExecuteRequest: (config: RequestConfig) => Promise<ApiResponseData>;
-  onSaveToCollection: (config: RequestConfig, response?: ApiResponseData) => void;
-  openAiModalWithContext: (prompt: string, context: any) => void;
+  initialConfig: RequestConfig | null;
+  capabilities: Capabilities;
+  environment: Environment | null;
+  onExecuteRequest: (
+    config: RequestConfig,
+    options: { signal: AbortSignal },
+  ) => Promise<ApiResponseData>;
+  onSaveToCollection: (config: RequestConfig) => void;
+  onOpenAiModal: (prompt: string, context: unknown) => void;
+  onConfigChange: (config: RequestConfig) => void;
+  onNotify: (message: string, tone?: 'info' | 'error') => void;
 }
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
@@ -38,941 +70,1133 @@ const METHOD_COLORS: Record<HttpMethod, string> = {
   OPTIONS: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
 };
 
-export const Playground: React.FC<PlaygroundProps> = ({
+const CODE_LANGUAGES: Array<{ id: CodeLanguage; label: string }> = [
+  { id: 'fetch', label: 'JavaScript — fetch' },
+  { id: 'axios', label: 'JavaScript — axios' },
+  { id: 'curl', label: 'cURL' },
+  { id: 'python', label: 'Python — requests' },
+  { id: 'node', label: 'Node.js' },
+  { id: 'go', label: 'Go' },
+  { id: 'rust', label: 'Rust' },
+  { id: 'php', label: 'PHP' },
+];
+
+export const DEFAULT_CONFIG: RequestConfig = {
+  method: 'GET',
+  url: 'https://api.open-meteo.com/v1/forecast',
+  params: [
+    { id: 'p-lat', key: 'latitude', value: '37.7749', enabled: true },
+    { id: 'p-lon', key: 'longitude', value: '-122.4194', enabled: true },
+    { id: 'p-cw', key: 'current_weather', value: 'true', enabled: true },
+  ],
+  headers: [{ id: 'h-accept', key: 'Accept', value: 'application/json', enabled: true }],
+  authType: 'No Auth',
+  authConfig: { apiKeyIn: 'query' },
+  bodyType: 'none',
+  body: '',
+  useProxy: false,
+};
+
+type RequestTab = 'params' | 'headers' | 'auth' | 'body' | 'assertions' | 'code';
+type ResponseTab = 'body' | 'raw' | 'headers' | 'preview' | 'assertions';
+
+export function Playground({
   initialConfig,
+  capabilities,
+  environment,
   onExecuteRequest,
   onSaveToCollection,
-  openAiModalWithContext,
-}) => {
-  // Request Configuration State
-  const [method, setMethod] = useState<HttpMethod>('GET');
-  const [url, setUrl] = useState<string>(
-    'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
+  onOpenAiModal,
+  onConfigChange,
+  onNotify,
+}: PlaygroundProps) {
+  const [config, setConfig] = useState<RequestConfig>(initialConfig ?? DEFAULT_CONFIG);
+  /**
+   * The URL bar keeps its own draft text.
+   *
+   * Deriving the input's value from state on every keystroke means the field
+   * fights the user: typing "?q=hello" round-trips through split/join, so the
+   * partially-typed "?q" comes back as "?q=" and the next character lands in
+   * the wrong place. The draft is what the user typed; the parsed result feeds
+   * the params table; and the draft is only overwritten when the config changes
+   * from somewhere else (a directory pick, the copilot, a share link, or a row
+   * being edited in the params table).
+   */
+  const [urlDraft, setUrlDraft] = useState(() =>
+    displayUrl((initialConfig ?? DEFAULT_CONFIG).url, (initialConfig ?? DEFAULT_CONFIG).params),
   );
-  const [params, setParams] = useState<KeyValuePair[]>([]);
-  const [headers, setHeaders] = useState<KeyValuePair[]>([
-    { id: '1', key: 'Accept', value: 'application/json', enabled: true },
-  ]);
-  const [authType, setAuthType] = useState<AuthType>('No Auth');
-  const [authConfig, setAuthConfig] = useState({
-    apiKeyName: '',
-    apiKeyValue: '',
-    apiKeyIn: 'query' as 'header' | 'query',
-    bearerToken: '',
-    basicUsername: '',
-    basicPassword: '',
-  });
-  const [bodyType, setBodyType] = useState<'none' | 'json' | 'form-data' | 'raw'>('none');
-  const [body, setBody] = useState<string>('');
-  const [useProxy, setUseProxy] = useState<boolean>(false);
-
-  // UI Tabs State
-  const [reqTab, setReqTab] = useState<'params' | 'headers' | 'auth' | 'body' | 'code'>('params');
-  const [resTab, setResTab] = useState<'parsed' | 'raw' | 'headers' | 'preview'>('parsed');
-  const [codeLang, setCodeLang] = useState<any>('fetch');
-  const [jsonSearchFilter, setJsonSearchFilter] = useState('');
-
-  // Execution & Response State
-  const [loading, setLoading] = useState<boolean>(false);
+  const urlDraftIsAuthoritative = useRef(false);
+  const [reqTab, setReqTab] = useState<RequestTab>('params');
+  const [resTab, setResTab] = useState<ResponseTab>('body');
+  const [codeLang, setCodeLang] = useState<CodeLanguage>('fetch');
+  const [jsonFilter, setJsonFilter] = useState('');
+  const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponseData | null>(null);
-  const [copiedCode, setCopiedCode] = useState<boolean>(false);
-  const [copiedResponse, setCopiedResponse] = useState<boolean>(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  // Load initial config when passed from Directory or History
+  // Replacing the whole config avoids the old merge-only-truthy-fields
+  // behaviour, which left a stale body behind when a GET was loaded over a POST
+  // and did nothing at all when the same entry was selected twice.
   useEffect(() => {
     if (initialConfig) {
-      if (initialConfig.method) setMethod(initialConfig.method);
-      if (initialConfig.url) setUrl(initialConfig.url);
-      if (initialConfig.params) setParams(initialConfig.params);
-      if (initialConfig.headers) setHeaders(initialConfig.headers);
-      if (initialConfig.authType) setAuthType(initialConfig.authType);
-      if (initialConfig.authConfig) setAuthConfig({ ...authConfig, ...initialConfig.authConfig });
-      if (initialConfig.bodyType) setBodyType(initialConfig.bodyType);
-      if (initialConfig.body) setBody(initialConfig.body);
-      if (typeof initialConfig.useProxy === 'boolean') setUseProxy(initialConfig.useProxy);
+      setConfig(initialConfig);
+      setUrlDraft(displayUrl(initialConfig.url, initialConfig.params));
+      urlDraftIsAuthoritative.current = false;
+      setResponse(null);
     }
   }, [initialConfig]);
 
-  // Construct current request config object
-  const currentConfig: RequestConfig = useMemo(
-    () => ({
-      method,
-      url,
-      params,
-      headers,
-      authType,
-      authConfig,
-      bodyType,
-      body,
-      useProxy,
-    }),
-    [method, url, params, headers, authType, authConfig, bodyType, body, useProxy],
+  // Reflect param-table edits back into the URL bar, but never while the user
+  // is the one typing there.
+  const canonicalUrl = useMemo(
+    () => displayUrl(config.url, config.params),
+    [config.url, config.params],
+  );
+  useEffect(() => {
+    if (!urlDraftIsAuthoritative.current) setUrlDraft(canonicalUrl);
+  }, [canonicalUrl]);
+
+  useEffect(() => {
+    onConfigChange(config);
+  }, [config, onConfigChange]);
+
+  const vars = useMemo(() => resolveEnvironment(environment), [environment]);
+  const knownVariables = useMemo(() => [...vars.values.keys()], [vars]);
+  const unresolved = useMemo(() => findUnresolvedInConfig(config, vars), [config, vars]);
+
+  const proxyAvailable = capabilities.proxy.available;
+
+  const patch = useCallback((changes: Partial<RequestConfig>) => {
+    setConfig((current) => ({ ...current, ...changes }));
+  }, []);
+
+  /** URL bar edits flow into the params table; disabled rows are preserved. */
+  const handleUrlChange = (raw: string) => {
+    urlDraftIsAuthoritative.current = true;
+    setUrlDraft(raw);
+    setConfig((current) => {
+      const { base, params } = mergeUrlIntoParams(raw, current.params);
+      return { ...current, url: base, params };
+    });
+  };
+
+  const copy = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      onNotify('Could not access the clipboard.', 'error');
+    }
+  };
+
+  /**
+   * Executes the config passed in, not whatever is in state when a timer fires.
+   * The AI auto-send path used to be `setTimeout(handleExecute, 300)`, which
+   * raced React's re-render and could send the previous configuration.
+   */
+  const execute = useCallback(
+    async (target?: RequestConfig) => {
+      const toSend = target ?? config;
+      if (!isSendableUrl(toSend.url)) {
+        onNotify('Enter a valid http(s) URL first.', 'error');
+        return;
+      }
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setLoading(true);
+      setResponse(null);
+      try {
+        const result = await onExecuteRequest(toSend, { signal: controller.signal });
+        const assertionResults = evaluateAssertions(toSend.assertions, result);
+        setResponse({ ...result, assertionResults });
+        setResTab(assertionResults.length > 0 ? 'assertions' : 'body');
+      } finally {
+        if (abortRef.current === controller) abortRef.current = null;
+        setLoading(false);
+      }
+    },
+    [config, onExecuteRequest, onNotify],
   );
 
-  // Sync Params with URL query string
-  const handleUrlChange = (newUrl: string) => {
-    setUrl(newUrl);
-    try {
-      const parsed = new URL(newUrl);
-      const urlParams: KeyValuePair[] = [];
-      parsed.searchParams.forEach((val, key) => {
-        urlParams.push({ id: Math.random().toString(), key, value: val, enabled: true });
-      });
-      if (urlParams.length > 0) {
-        setParams(urlParams);
+  const cancel = () => {
+    abortRef.current?.abort();
+    onNotify('Request cancelled.');
+  };
+
+  // ⌘/Ctrl+Enter sends from anywhere on the page.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault();
+        void execute();
       }
-    } catch {
-      // Invalid URL input mid-type, keep current params
-    }
-  };
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [execute]);
 
-  const handleExecute = async () => {
-    setLoading(true);
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  const handlePasteCurl = async () => {
+    let text = '';
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      onNotify('Clipboard access was denied by the browser.', 'error');
+      return;
+    }
+    if (!looksLikeCurl(text)) {
+      onNotify('The clipboard does not contain a curl command.', 'error');
+      return;
+    }
+    const { config: parsed, warnings } = parseCurl(text);
+    if (!parsed) {
+      onNotify(warnings[0] ?? 'That curl command could not be parsed.', 'error');
+      return;
+    }
+    setConfig(parsed);
     setResponse(null);
-    try {
-      const res = await onExecuteRequest(currentConfig);
-      setResponse(res);
-    } catch (err: any) {
-      setResponse({
-        ok: false,
-        status: 500,
-        statusText: 'Execution Error',
-        headers: {},
-        data: { error: err?.message || 'Failed to send request' },
-        contentType: 'application/json',
-        duration: 0,
-        sizeBytes: 0,
-        timestamp: Date.now(),
-        error: err?.message,
-      });
-    } finally {
-      setLoading(false);
-    }
+    onNotify(warnings.length ? `Imported. ${warnings.join(' ')}` : 'curl command imported.');
   };
 
-  // Callback to drive Playground configuration from AI Chat Assistant
-  const handleApplyConfigFromAi = (configUpdate: Partial<RequestConfig>) => {
-    if (configUpdate.method) setMethod(configUpdate.method);
-    if (configUpdate.url) handleUrlChange(configUpdate.url);
-    if (configUpdate.params && Array.isArray(configUpdate.params)) {
-      setParams(
-        configUpdate.params.map((p: any, idx: number) => ({
-          id: p.id || `ai-param-${Date.now()}-${idx}`,
-          key: p.key || '',
-          value: String(p.value ?? ''),
-          enabled: typeof p.enabled === 'boolean' ? p.enabled : true,
-        })),
-      );
-    }
-    if (configUpdate.headers && Array.isArray(configUpdate.headers)) {
-      setHeaders(
-        configUpdate.headers.map((h: any, idx: number) => ({
-          id: h.id || `ai-header-${Date.now()}-${idx}`,
-          key: h.key || '',
-          value: String(h.value ?? ''),
-          enabled: typeof h.enabled === 'boolean' ? h.enabled : true,
-        })),
-      );
-    }
-    if (configUpdate.authType) setAuthType(configUpdate.authType);
-    if (configUpdate.authConfig) setAuthConfig((prev) => ({ ...prev, ...configUpdate.authConfig }));
-    if (configUpdate.bodyType) setBodyType(configUpdate.bodyType);
-    if (typeof configUpdate.body === 'string') setBody(configUpdate.body);
-    if (typeof configUpdate.useProxy === 'boolean') setUseProxy(configUpdate.useProxy);
+  const handleShare = async () => {
+    await copy(buildShareUrl(config), 'share');
+    onNotify(
+      hasUnshareableSecrets(config)
+        ? 'Link copied. Credentials were deliberately left out — the recipient supplies their own.'
+        : 'Share link copied to clipboard.',
+    );
   };
 
-  // Param Table Manipulations
-  const addParamRow = () => {
-    setParams([...params, { id: Date.now().toString(), key: '', value: '', enabled: true }]);
-  };
-  const removeParamRow = (id: string) => {
-    setParams(params.filter((p) => p.id !== id));
-  };
-  const updateParamRow = (id: string, field: 'key' | 'value' | 'enabled', val: any) => {
-    setParams(params.map((p) => (p.id === id ? { ...p, [field]: val } : p)));
-  };
-
-  // Header Table Manipulations
-  const addHeaderRow = () => {
-    setHeaders([...headers, { id: Date.now().toString(), key: '', value: '', enabled: true }]);
-  };
-  const removeHeaderRow = (id: string) => {
-    setHeaders(headers.filter((h) => h.id !== id));
-  };
-  const updateHeaderRow = (id: string, field: 'key' | 'value' | 'enabled', val: any) => {
-    setHeaders(headers.map((h) => (h.id === id ? { ...h, [field]: val } : h)));
-  };
-
-  // Code snippet text
-  const currentSnippet = useMemo(() => {
-    return generateCodeSnippet(currentConfig, codeLang);
-  }, [currentConfig, codeLang]);
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(currentSnippet);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  const handleCopyResponse = () => {
-    if (!response) return;
-    const text =
-      typeof response.data === 'object'
-        ? JSON.stringify(response.data, null, 2)
-        : String(response.data);
-    navigator.clipboard.writeText(text);
-    setCopiedResponse(true);
-    setTimeout(() => setCopiedResponse(false), 2000);
-  };
-
-  // Pre-fill sample body templates
-  const handleFormatJsonBody = () => {
-    try {
-      const parsed = JSON.parse(body);
-      setBody(JSON.stringify(parsed, null, 2));
-    } catch {
-      // invalid json
-    }
-  };
+  const snippet = useMemo(() => generateCodeSnippet(config, codeLang), [config, codeLang]);
+  const assertionResults = response?.assertionResults ?? [];
+  const failedAssertions = assertionResults.filter((r) => !r.passed).length;
+  const rawText =
+    typeof response?.data === 'string' ? response.data : JSON.stringify(response?.data ?? null);
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Top Request Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-          {/* Method Selector */}
-          <div className="relative min-w-[120px]">
-            <select
-              id="playground-method-select"
-              value={method}
-              onChange={(e) => setMethod(e.target.value as HttpMethod)}
-              className={`w-full appearance-none px-3.5 py-2.5 rounded-xl border font-bold text-sm text-center font-mono cursor-pointer transition-all ${METHOD_COLORS[method]}`}
-            >
-              {HTTP_METHODS.map((m) => (
-                <option key={m} value={m} className="bg-slate-900 text-slate-100 font-mono">
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
+      <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-xl sm:p-5">
+        <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
+          <label className="sr-only" htmlFor="method-select">
+            HTTP method
+          </label>
+          <select
+            id="method-select"
+            value={config.method}
+            onChange={(e) => patch({ method: e.target.value as HttpMethod })}
+            className={`min-w-[120px] cursor-pointer appearance-none rounded-xl border px-3.5 py-2.5 text-center font-mono text-sm font-bold transition-all ${METHOD_COLORS[config.method]}`}
+          >
+            {HTTP_METHODS.map((m) => (
+              <option key={m} value={m} className="bg-slate-900 font-mono text-slate-100">
+                {m}
+              </option>
+            ))}
+          </select>
 
-          {/* URL Input */}
-          <div className="flex-1 relative">
+          <div className="relative flex-1">
+            <label className="sr-only" htmlFor="url-input">
+              Request URL
+            </label>
             <input
-              id="playground-url-input"
+              id="url-input"
               type="text"
-              value={url}
+              value={urlDraft}
               onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder="Enter request endpoint URL (e.g. https://api.open-meteo.com/v1/forecast?latitude=37.77...)"
-              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+              onBlur={() => {
+                // Normalise once the user is done, so the bar settles on the
+                // canonical form instead of keeping stray typing artefacts.
+                urlDraftIsAuthoritative.current = false;
+                setUrlDraft(displayUrl(config.url, config.params));
+              }}
+              placeholder="https://api.example.com/v1/items?limit=10"
+              spellCheck={false}
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 font-mono text-sm text-slate-200 placeholder-slate-600 transition-all focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
             />
           </div>
 
-          {/* Mode Toggle (Direct Browser Client vs Proxy) */}
           <button
-            id="btn-toggle-proxy"
-            onClick={() => setUseProxy(!useProxy)}
-            className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-mono font-medium transition-all ${
-              !useProxy
-                ? 'bg-cyan-950/80 border-cyan-800 text-cyan-300'
-                : 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
-            }`}
+            type="button"
+            onClick={() => patch({ useProxy: !config.useProxy })}
+            disabled={!proxyAvailable}
             title={
-              useProxy
-                ? 'Server proxy mode (requires backend proxy server)'
-                : 'Direct browser execution (100% static & GitHub Pages ready)'
+              proxyAvailable
+                ? config.useProxy
+                  ? 'Requests are routed through the configured proxy.'
+                  : 'Requests run directly from your browser and are subject to CORS.'
+                : 'No proxy is configured on this deployment — see worker/README.md.'
             }
+            className={`flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2.5 font-mono text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+              config.useProxy && proxyAvailable
+                ? 'border-emerald-800 bg-emerald-950/80 text-emerald-300'
+                : 'border-cyan-800 bg-cyan-950/80 text-cyan-300'
+            }`}
           >
-            <ShieldCheck
-              className={`w-4 h-4 ${!useProxy ? 'text-cyan-400' : 'text-emerald-400'}`}
-            />
-            <span className="hidden sm:inline">Mode:</span>
-            <span>{useProxy ? 'Server Proxy' : 'Direct (Browser)'}</span>
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            <span>{config.useProxy && proxyAvailable ? 'Via proxy' : 'Direct'}</span>
           </button>
 
-          {/* Send Request Button */}
+          {loading ? (
+            <button
+              type="button"
+              onClick={cancel}
+              className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-rose-500 active:scale-95"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+              <span>Cancel</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void execute()}
+              disabled={!isSendableUrl(config.url)}
+              title="Send request (⌘/Ctrl + Enter)"
+              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition-all hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50 active:scale-95"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
+              <span>Send</span>
+            </button>
+          )}
+        </div>
+
+        {unresolved.length > 0 && (
+          <p className="flex items-center gap-2 rounded-lg border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-xs text-amber-300">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>
+              Undefined variable{unresolved.length > 1 ? 's' : ''}:{' '}
+              <code className="font-bold">{unresolved.join(', ')}</code>. The literal placeholder
+              will be sent unless you define them.
+            </span>
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-slate-800/60 pt-2 text-xs">
           <button
-            id="btn-send-request"
-            onClick={handleExecute}
-            disabled={loading || !url}
-            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all active:scale-95"
+            type="button"
+            onClick={handlePasteCurl}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 font-mono text-[11px] text-slate-300 hover:bg-slate-800"
           >
-            {loading ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                <span>Sending...</span>
-              </>
+            <Terminal className="h-3 w-3" aria-hidden="true" />
+            Paste cURL
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 font-mono text-[11px] text-slate-300 hover:bg-slate-800"
+          >
+            {copied === 'share' ? (
+              <Check className="h-3 w-3 text-emerald-400" aria-hidden="true" />
             ) : (
-              <>
-                <Send className="w-4 h-4 text-white" />
-                <span>Send</span>
-              </>
+              <Link2 className="h-3 w-3" aria-hidden="true" />
             )}
+            {copied === 'share' ? 'Link copied' : 'Copy share link'}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSaveToCollection(config)}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 font-mono text-[11px] text-slate-300 hover:bg-slate-800"
+          >
+            <Database className="h-3 w-3" aria-hidden="true" />
+            Save to collection
           </button>
         </div>
+      </section>
 
-        {/* Quick Endpoint Presets Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto text-xs pt-1 border-t border-slate-800/60 text-slate-400">
-          <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
-            Quick Presets:
-          </span>
-          <button
-            onClick={() => {
-              setMethod('GET');
-              setUrl(
-                'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
-              );
-              handleUrlChange(
-                'https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current_weather=true',
-              );
-            }}
-            className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-          >
-            Weather Forecast
-          </button>
-          <button
-            onClick={() => {
-              setMethod('GET');
-              setUrl(
-                'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',
-              );
-              handleUrlChange(
-                'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',
-              );
-            }}
-            className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-          >
-            Crypto Prices
-          </button>
-          <button
-            onClick={() => {
-              setMethod('GET');
-              setUrl('https://pokeapi.co/api/v2/pokemon/charizard');
-              handleUrlChange('https://pokeapi.co/api/v2/pokemon/charizard');
-            }}
-            className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-          >
-            Pokédex
-          </button>
-          <button
-            onClick={() => {
-              setMethod('POST');
-              setUrl('https://jsonplaceholder.typicode.com/posts');
-              setBodyType('json');
-              setBody(
-                JSON.stringify(
-                  { title: 'Endpointer Test', body: 'Testing REST POST runner', userId: 1 },
-                  null,
-                  2,
-                ),
-              );
-            }}
-            className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-          >
-            Mock JSON POST
-          </button>
-        </div>
-      </div>
-
-      {/* Interactive AI Chat Assistant Helper (Red Box Banner) */}
       <PlaygroundAiChat
-        currentConfig={currentConfig}
+        config={config}
         response={response}
-        onApplyConfig={handleApplyConfigFromAi}
-        onExecuteRequest={handleExecute}
+        capabilities={capabilities}
+        onApplyConfig={(update) => {
+          const next = { ...config, ...update };
+          setConfig(next);
+          return next;
+        }}
+        onExecute={execute}
+        onNotify={onNotify}
       />
 
-      {/* Main Grid: Left Request Builder, Right Response Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* LEFT PANEL: Request Configuration */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl flex flex-col justify-between">
-          <div>
-            {/* Request Tabs Header */}
-            <div className="flex items-center gap-1 border-b border-slate-800 pb-2 overflow-x-auto">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
+          <div
+            role="tablist"
+            aria-label="Request configuration"
+            className="flex items-center gap-1 overflow-x-auto border-b border-slate-800 pb-2"
+          >
+            {(
+              [
+                [
+                  'params',
+                  `Params (${config.params.filter((p) => p.enabled && p.key).length})`,
+                  null,
+                ],
+                [
+                  'headers',
+                  `Headers (${config.headers.filter((h) => h.enabled && h.key).length})`,
+                  null,
+                ],
+                ['auth', `Auth: ${config.authType}`, Lock],
+                ['body', `Body: ${config.bodyType}`, FileText],
+                ['assertions', `Assertions (${config.assertions?.length ?? 0})`, CheckCircle2],
+                ['code', 'Code', Code],
+              ] as Array<[RequestTab, string, typeof Lock | null]>
+            ).map(([id, label, Icon]) => (
               <button
-                id="req-tab-params"
-                onClick={() => setReqTab('params')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  reqTab === 'params'
-                    ? 'bg-slate-800 text-cyan-400 border border-slate-700'
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={reqTab === id}
+                onClick={() => setReqTab(id)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  reqTab === id
+                    ? 'border border-slate-700 bg-slate-800 text-cyan-400'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span>Params</span>
-                <span className="px-1.5 text-[10px] rounded-full bg-slate-950 text-slate-400">
-                  {params.filter((p) => p.enabled && p.key).length}
+                {Icon && <Icon className="h-3 w-3" aria-hidden="true" />}
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[300px] flex-1 pt-4">
+            {reqTab === 'params' && (
+              <KeyValueTable
+                rows={config.params}
+                onChange={(params) => patch({ params })}
+                keyPlaceholder="Parameter"
+                valuePlaceholder="Value"
+                addLabel="Add parameter"
+                emptyMessage="No query parameters. Add one here, or type them into the URL above — the two stay in sync."
+                idPrefix="param"
+                knownVariables={knownVariables}
+              />
+            )}
+
+            {reqTab === 'headers' && (
+              <KeyValueTable
+                rows={config.headers}
+                onChange={(headers) => patch({ headers })}
+                keyPlaceholder="Header name"
+                valuePlaceholder="Header value"
+                addLabel="Add header"
+                emptyMessage="No custom headers."
+                idPrefix="header"
+                knownVariables={knownVariables}
+              />
+            )}
+
+            {reqTab === 'auth' && <AuthPanel config={config} onChange={patch} />}
+
+            {reqTab === 'body' && (
+              <BodyPanel config={config} onChange={patch} onNotify={onNotify} />
+            )}
+
+            {reqTab === 'assertions' && (
+              <AssertionsPanel
+                assertions={config.assertions ?? []}
+                response={response}
+                onChange={(assertions) => patch({ assertions })}
+              />
+            )}
+
+            {reqTab === 'code' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="sr-only" htmlFor="code-language">
+                    Snippet language
+                  </label>
+                  <select
+                    id="code-language"
+                    value={codeLang}
+                    onChange={(e) => setCodeLang(e.target.value as CodeLanguage)}
+                    className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 font-mono text-xs font-bold text-slate-200 focus:border-cyan-500 focus:outline-none"
+                  >
+                    {CODE_LANGUAGES.map((lang) => (
+                      <option key={lang.id} value={lang.id}>
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void copy(snippet, 'code')}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
+                  >
+                    {copied === 'code' ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+                    {copied === 'code' ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                <pre className="max-h-[320px] overflow-auto rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-[11px] leading-relaxed text-cyan-300">
+                  {snippet}
+                </pre>
+              </div>
+            )}
+          </div>
+
+          <p className="truncate border-t border-slate-800 pt-3 font-mono text-[11px] text-slate-500">
+            {config.method} {buildFullUrl(config)}
+          </p>
+        </section>
+
+        <section className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Response
+              </h2>
+              {response && (
+                <span
+                  className={`rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold ${
+                    response.ok
+                      ? 'border-emerald-800 bg-emerald-950 text-emerald-400'
+                      : 'border-rose-800 bg-rose-950 text-rose-400'
+                  }`}
+                >
+                  {response.status || '—'} {response.statusText}
                 </span>
-              </button>
-
-              <button
-                id="req-tab-headers"
-                onClick={() => setReqTab('headers')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  reqTab === 'headers'
-                    ? 'bg-slate-800 text-cyan-400 border border-slate-700'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <span>Headers</span>
-                <span className="px-1.5 text-[10px] rounded-full bg-slate-950 text-slate-400">
-                  {headers.filter((h) => h.enabled && h.key).length}
+              )}
+              {assertionResults.length > 0 && (
+                <span
+                  className={`rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold ${
+                    failedAssertions === 0
+                      ? 'border-emerald-800 bg-emerald-950 text-emerald-400'
+                      : 'border-rose-800 bg-rose-950 text-rose-400'
+                  }`}
+                >
+                  {assertionResults.length - failedAssertions}/{assertionResults.length} assertions
                 </span>
-              </button>
-
-              <button
-                id="req-tab-auth"
-                onClick={() => setReqTab('auth')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  reqTab === 'auth'
-                    ? 'bg-slate-800 text-amber-400 border border-slate-700'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Lock className="w-3 h-3 text-amber-400" />
-                <span>Auth ({authType})</span>
-              </button>
-
-              <button
-                id="req-tab-body"
-                onClick={() => setReqTab('body')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  reqTab === 'body'
-                    ? 'bg-slate-800 text-purple-400 border border-slate-700'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <FileText className="w-3 h-3 text-purple-400" />
-                <span>Body ({bodyType})</span>
-              </button>
-
-              <button
-                id="req-tab-code"
-                onClick={() => setReqTab('code')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  reqTab === 'code'
-                    ? 'bg-slate-800 text-emerald-400 border border-slate-700'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Code className="w-3 h-3 text-emerald-400" />
-                <span>Code Generator</span>
-              </button>
+              )}
             </div>
 
-            {/* TAB CONTENT */}
-            <div className="pt-4 min-h-[280px]">
-              {/* PARAMS TAB */}
-              {reqTab === 'params' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400 px-1 font-mono">
-                    <span>Query Parameters</span>
-                    <button
-                      onClick={addParamRow}
-                      className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-semibold"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Key-Value</span>
-                    </button>
-                  </div>
+            {response && (
+              <div className="flex items-center gap-3 font-mono text-xs text-slate-400">
+                <span className="flex items-center gap-1" title="Round trip time">
+                  <Clock className="h-3.5 w-3.5 text-cyan-400" aria-hidden="true" />
+                  {response.duration} ms
+                </span>
+                <span className="flex items-center gap-1" title="Payload size">
+                  <Database className="h-3.5 w-3.5 text-indigo-400" aria-hidden="true" />
+                  {(response.sizeBytes / 1024).toFixed(2)} KB
+                </span>
+                <span className="rounded border border-slate-700 px-1.5 py-0.5 text-[10px] uppercase">
+                  {response.transport ?? 'direct'}
+                </span>
+              </div>
+            )}
+          </div>
 
-                  {params.length === 0 ? (
-                    <div className="text-center py-8 bg-slate-950 border border-slate-800 rounded-xl text-slate-500 text-xs">
-                      No URL query parameters defined. Click 'Add Key-Value' above.
-                    </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 pt-3">
+            <div role="tablist" aria-label="Response view" className="flex items-center gap-1">
+              {(
+                [
+                  ['body', 'Body'],
+                  ['raw', 'Raw'],
+                  ['headers', `Headers (${response ? Object.keys(response.headers).length : 0})`],
+                  ['preview', 'Preview'],
+                  ['assertions', `Assertions (${assertionResults.length})`],
+                ] as Array<[ResponseTab, string]>
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={resTab === id}
+                  onClick={() => setResTab(id)}
+                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition-all ${
+                    resTab === id
+                      ? 'border border-slate-700 bg-slate-800 text-cyan-400'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {response && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void copy(rawText, 'response')}
+                  aria-label="Copy response body"
+                  className="rounded-lg border border-slate-800 bg-slate-950 p-1.5 text-slate-400 hover:text-slate-200"
+                >
+                  {copied === 'response' ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
                   ) : (
-                    <div className="space-y-2">
-                      {params.map((p) => (
-                        <div
-                          key={p.id}
-                          className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={p.enabled}
-                            onChange={(e) => updateParamRow(p.id, 'enabled', e.target.checked)}
-                            className="rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0 cursor-pointer"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Key"
-                            value={p.key}
-                            onChange={(e) => updateParamRow(p.id, 'key', e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Value"
-                            value={p.value}
-                            onChange={(e) => updateParamRow(p.id, 'value', e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                          />
-                          <button
-                            onClick={() => removeParamRow(p.id)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onOpenAiModal(
+                      'Analyse this response: generate types, explain the key fields, and suggest edge cases worth testing.',
+                      response.data,
+                    )
+                  }
+                  className="flex items-center gap-1 rounded-lg border border-indigo-800 bg-indigo-950 px-2.5 py-1 text-xs font-semibold text-indigo-300 hover:bg-indigo-900"
+                >
+                  <Sparkles className="h-3 w-3" aria-hidden="true" />
+                  Analyse
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="min-h-[300px] flex-1">
+            {loading && (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-slate-800/80 bg-slate-950/60 py-20 text-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-cyan-400" aria-hidden="true" />
+                <p className="font-mono text-xs text-cyan-300">
+                  {config.useProxy && proxyAvailable
+                    ? 'Sending via the proxy…'
+                    : 'Sending directly from your browser…'}
+                </p>
+                <button
+                  type="button"
+                  onClick={cancel}
+                  aria-label="Cancel the in-flight request"
+                  className="text-[11px] text-slate-400 underline hover:text-slate-200"
+                >
+                  Cancel request
+                </button>
+              </div>
+            )}
+
+            {!loading && !response && (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-slate-800/80 bg-slate-950/60 py-20 text-center text-slate-500">
+                <Play className="h-10 w-10 text-slate-700" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-bold text-slate-400">Nothing sent yet</p>
+                  <p className="text-xs text-slate-600">
+                    Press Send, or ⌘/Ctrl + Enter from anywhere on this page.
+                  </p>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* HEADERS TAB */}
-              {reqTab === 'headers' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400 px-1 font-mono">
-                    <span>HTTP Request Headers</span>
-                    <button
-                      onClick={addHeaderRow}
-                      className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-semibold"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Header</span>
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {headers.map((h) => (
-                      <div
-                        key={h.id}
-                        className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={h.enabled}
-                          onChange={(e) => updateHeaderRow(h.id, 'enabled', e.target.checked)}
-                          className="rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Header Name"
-                          value={h.key}
-                          onChange={(e) => updateHeaderRow(h.id, 'key', e.target.value)}
-                          className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Header Value"
-                          value={h.value}
-                          onChange={(e) => updateHeaderRow(h.id, 'value', e.target.value)}
-                          className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                        />
-                        <button
-                          onClick={() => removeHeaderRow(h.id)}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* AUTH TAB */}
-              {reqTab === 'auth' && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs text-slate-400 font-mono">Auth Type:</label>
-                    <select
-                      value={authType}
-                      onChange={(e) => setAuthType(e.target.value as AuthType)}
-                      className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer"
-                    >
-                      <option value="No Auth">No Auth</option>
-                      <option value="API Key">API Key</option>
-                      <option value="Bearer Token">Bearer Token</option>
-                      <option value="Basic Auth">Basic Auth</option>
-                    </select>
-                  </div>
-
-                  {authType === 'API Key' && (
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                      <div>
-                        <label className="text-[11px] text-slate-400 font-mono">Key Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. api_key or X-API-KEY"
-                          value={authConfig.apiKeyName}
-                          onChange={(e) =>
-                            setAuthConfig({ ...authConfig, apiKeyName: e.target.value })
-                          }
-                          className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-400 font-mono">Key Value</label>
-                        <input
-                          type="text"
-                          placeholder="Secret API key string..."
-                          value={authConfig.apiKeyValue}
-                          onChange={(e) =>
-                            setAuthConfig({ ...authConfig, apiKeyValue: e.target.value })
-                          }
-                          className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                        />
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-slate-300 font-mono">
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="apiKeyIn"
-                            checked={authConfig.apiKeyIn === 'query'}
-                            onChange={() => setAuthConfig({ ...authConfig, apiKeyIn: 'query' })}
-                          />
-                          <span>In Query Params</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="apiKeyIn"
-                            checked={authConfig.apiKeyIn === 'header'}
-                            onChange={() => setAuthConfig({ ...authConfig, apiKeyIn: 'header' })}
-                          />
-                          <span>In Headers</span>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {authType === 'Bearer Token' && (
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                      <label className="text-[11px] text-slate-400 font-mono">Bearer Token</label>
-                      <input
-                        type="text"
-                        placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-                        value={authConfig.bearerToken}
-                        onChange={(e) =>
-                          setAuthConfig({ ...authConfig, bearerToken: e.target.value })
-                        }
-                        className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                      />
-                    </div>
-                  )}
-
-                  {authType === 'Basic Auth' && (
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                      <div>
-                        <label className="text-[11px] text-slate-400 font-mono">Username</label>
-                        <input
-                          type="text"
-                          placeholder="Username"
-                          value={authConfig.basicUsername}
-                          onChange={(e) =>
-                            setAuthConfig({ ...authConfig, basicUsername: e.target.value })
-                          }
-                          className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-400 font-mono">Password</label>
-                        <input
-                          type="password"
-                          placeholder="Password"
-                          value={authConfig.basicPassword}
-                          onChange={(e) =>
-                            setAuthConfig({ ...authConfig, basicPassword: e.target.value })
-                          }
-                          className="w-full mt-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {authType === 'No Auth' && (
-                    <div className="text-center py-8 text-slate-500 text-xs bg-slate-950 border border-slate-800 rounded-xl">
-                      This endpoint requires no authentication parameters.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* BODY TAB */}
-              {reqTab === 'body' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-                    <div className="flex items-center gap-2">
-                      <span>Body Type:</span>
-                      <select
-                        value={bodyType}
-                        onChange={(e) => setBodyType(e.target.value as any)}
-                        className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 font-semibold"
-                      >
-                        <option value="none">none</option>
-                        <option value="json">JSON</option>
-                        <option value="raw">raw text</option>
-                      </select>
-                    </div>
-
-                    {bodyType === 'json' && (
+            {!loading && response && (
+              <div className="space-y-2">
+                {response.error && (
+                  <div className="space-y-2 rounded-xl border border-rose-800 bg-rose-950/60 p-3 text-xs text-rose-200">
+                    <p className="flex items-center gap-2 font-bold">
+                      <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {response.statusText}
+                    </p>
+                    <p className="leading-relaxed text-rose-300/90">{response.error}</p>
+                    {response.errorKind === 'cors' && !proxyAvailable && (
+                      <p className="text-rose-300/80">
+                        No proxy is configured here. Run{' '}
+                        <code className="rounded bg-rose-950 px-1">npm run dev</code> locally, or
+                        deploy the Cloudflare Worker in <code>worker/</code>.
+                      </p>
+                    )}
+                    {response.errorKind === 'cors' && proxyAvailable && !config.useProxy && (
                       <button
-                        onClick={handleFormatJsonBody}
-                        className="text-cyan-400 hover:text-cyan-300 font-semibold text-[11px]"
+                        type="button"
+                        onClick={() => {
+                          const next = { ...config, useProxy: true };
+                          setConfig(next);
+                          void execute(next);
+                        }}
+                        className="rounded-lg border border-rose-700 bg-rose-900/60 px-3 py-1 font-semibold text-rose-100 hover:bg-rose-900"
                       >
-                        Format JSON
+                        Retry via proxy
                       </button>
                     )}
                   </div>
+                )}
 
-                  {bodyType !== 'none' ? (
-                    <textarea
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      placeholder={
-                        bodyType === 'json' ? '{\n  "key": "value"\n}' : 'Raw payload...'
-                      }
-                      rows={9}
-                      className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-200 focus:outline-none focus:border-cyan-500 leading-relaxed"
+                {resTab === 'body' && (
+                  <>
+                    <label className="sr-only" htmlFor="json-filter">
+                      Filter response with a JSONPath expression
+                    </label>
+                    <input
+                      id="json-filter"
+                      type="text"
+                      value={jsonFilter}
+                      onChange={(e) => setJsonFilter(e.target.value)}
+                      placeholder="Filter with JSONPath, e.g. $.results[*].name"
+                      className="mb-2 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 font-mono text-xs text-slate-300 placeholder-slate-600 focus:border-cyan-500 focus:outline-none"
                     />
-                  ) : (
-                    <div className="text-center py-10 text-slate-500 text-xs bg-slate-950 border border-slate-800 rounded-xl">
-                      Request method ({method}) has no request body payload attached. Select JSON or
-                      Raw above to edit.
+                    <div className="max-h-[340px] overflow-auto">
+                      <JsonViewer data={response.data} filter={jsonFilter} />
                     </div>
-                  )}
-                </div>
-              )}
+                  </>
+                )}
 
-              {/* CODE GENERATOR TAB */}
-              {reqTab === 'code' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <select
-                      value={codeLang}
-                      onChange={(e) => setCodeLang(e.target.value as any)}
-                      className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-200 focus:outline-none focus:border-cyan-500"
-                    >
-                      <option value="fetch">JavaScript fetch()</option>
-                      <option value="axios">JavaScript Axios</option>
-                      <option value="curl">cURL (Terminal)</option>
-                      <option value="python">Python requests</option>
-                      <option value="node">Node.js (v18+ Fetch)</option>
-                      <option value="go">Go net/http</option>
-                      <option value="rust">Rust reqwest</option>
-                      <option value="php">PHP cURL</option>
-                    </select>
-
-                    <button
-                      onClick={handleCopyCode}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
-                    >
-                      {copiedCode ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5 text-slate-400" />
-                      )}
-                      <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
-                    </button>
-                  </div>
-
-                  <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-cyan-300 overflow-x-auto leading-relaxed max-h-[260px]">
-                    {currentSnippet}
+                {resTab === 'raw' && (
+                  <pre className="max-h-[340px] overflow-auto whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-300">
+                    {rawText}
                   </pre>
-                </div>
-              )}
-            </div>
-          </div>
+                )}
 
-          {/* Action Footer */}
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span className="font-mono text-[11px]">
-              Target: {buildFullUrl(currentConfig).slice(0, 45)}...
-            </span>
-            <button
-              onClick={() => onSaveToCollection(currentConfig, response || undefined)}
-              className="flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-semibold"
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>Save to Collection</span>
-            </button>
-          </div>
-        </div>
+                {resTab === 'headers' && (
+                  <dl className="max-h-[340px] space-y-1 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-3 font-mono text-xs">
+                    {Object.entries(response.headers).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className="flex items-start justify-between gap-3 border-b border-slate-900 py-1 last:border-0"
+                      >
+                        <dt className="font-semibold text-cyan-400">{key}</dt>
+                        <dd className="max-w-[60%] break-all text-right text-slate-300">{value}</dd>
+                      </div>
+                    ))}
+                    {Object.keys(response.headers).length === 0 && (
+                      <p className="py-4 text-center leading-relaxed text-slate-500">
+                        No headers. A cross-origin response only exposes a safelisted subset unless
+                        the API sends Access-Control-Expose-Headers, and a failed request exposes
+                        none.
+                      </p>
+                    )}
+                  </dl>
+                )}
 
-        {/* RIGHT PANEL: Response Inspector */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-          <div>
-            {/* Response Status Bar */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Response
-                </span>
-                {response && (
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
-                      response.ok
-                        ? 'bg-emerald-950 border-emerald-800 text-emerald-400'
-                        : 'bg-rose-950 border-rose-800 text-rose-400'
-                    }`}
-                  >
-                    {response.status} {response.statusText}
-                  </span>
+                {resTab === 'preview' && (
+                  <ResponsePreview
+                    data={response.data}
+                    contentType={response.contentType}
+                    url={buildFullUrl(config)}
+                  />
+                )}
+
+                {resTab === 'assertions' && (
+                  <div className="space-y-2">
+                    {assertionResults.length === 0 ? (
+                      <p className="rounded-xl border border-slate-800 bg-slate-950 py-8 text-center text-xs text-slate-500">
+                        No assertions on this request. Add some in the Assertions tab.
+                      </p>
+                    ) : (
+                      assertionResults.map((result, index) => (
+                        <AssertionRow key={index} result={result} />
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {response.status > 0 && !response.ok && (
+                  <details className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs text-slate-400">
+                    <summary className="cursor-pointer font-semibold text-slate-300">
+                      What does {response.status} mean?
+                    </summary>
+                    <p className="mt-2 whitespace-pre-wrap leading-relaxed">
+                      {explainStatus(response)}
+                    </p>
+                  </details>
                 )}
               </div>
-
-              {response && (
-                <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
-                  <div className="flex items-center gap-1" title="Execution Time">
-                    <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>{response.duration} ms</span>
-                  </div>
-                  <div className="flex items-center gap-1" title="Payload Size">
-                    <Database className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>{(response.sizeBytes / 1024).toFixed(2)} KB</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Response View Mode Tabs */}
-            <div className="flex items-center justify-between pt-3 pb-2">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setResTab('parsed')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    resTab === 'parsed'
-                      ? 'bg-slate-800 text-cyan-400 border border-slate-700'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Parsed JSON
-                </button>
-                <button
-                  onClick={() => setResTab('raw')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    resTab === 'raw'
-                      ? 'bg-slate-800 text-cyan-400 border border-slate-700'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Raw Body
-                </button>
-                <button
-                  onClick={() => setResTab('headers')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    resTab === 'headers'
-                      ? 'bg-slate-800 text-cyan-400 border border-slate-700'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Response Headers ({response ? Object.keys(response.headers).length : 0})
-                </button>
-              </div>
-
-              {response && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleCopyResponse}
-                    className="p-1.5 text-slate-400 hover:text-slate-200 bg-slate-950 rounded-lg border border-slate-800"
-                    title="Copy Response Data"
-                  >
-                    {copiedResponse ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      openAiModalWithContext(
-                        'Analyze this API response structure, generate TypeScript interface, and explain key fields.',
-                        response.data,
-                      )
-                    }
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 text-indigo-300 text-xs font-semibold transition-all"
-                  >
-                    <Sparkles className="w-3 h-3 text-indigo-400" />
-                    <span>AI Insights</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* RESPONSE CONTENT BODY */}
-            <div className="mt-2 min-h-[290px]">
-              {!response && !loading && (
-                <div className="flex flex-col items-center justify-center py-20 text-center text-slate-500 space-y-3 bg-slate-950/60 border border-slate-800/80 rounded-xl">
-                  <Play className="w-10 h-10 text-slate-700" />
-                  <div>
-                    <h4 className="font-bold text-slate-400 text-sm">No Request Executed Yet</h4>
-                    <p className="text-xs text-slate-600">
-                      Click 'Send' above to execute request & inspect response payload.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {loading && (
-                <div className="flex flex-col items-center justify-center py-20 text-center space-y-3 bg-slate-950/60 border border-slate-800/80 rounded-xl">
-                  <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
-                  <p className="text-xs font-mono text-cyan-300">
-                    Fetching endpoint response via server proxy...
-                  </p>
-                </div>
-              )}
-
-              {response && (
-                <div className="space-y-2">
-                  {/* JSON Search Filter for long payloads */}
-                  {resTab === 'parsed' && typeof response.data === 'object' && (
-                    <input
-                      type="text"
-                      value={jsonSearchFilter}
-                      onChange={(e) => setJsonSearchFilter(e.target.value)}
-                      placeholder="Filter JSON response fields..."
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-300 placeholder-slate-600 focus:outline-none focus:border-cyan-500 mb-2"
-                    />
-                  )}
-
-                  {/* PARSED TAB */}
-                  {resTab === 'parsed' && (
-                    <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-emerald-300 overflow-x-auto leading-relaxed max-h-[320px] select-text">
-                      {typeof response.data === 'object'
-                        ? JSON.stringify(response.data, null, 2)
-                        : String(response.data)}
-                    </pre>
-                  )}
-
-                  {/* RAW TAB */}
-                  {resTab === 'raw' && (
-                    <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed max-h-[320px] whitespace-pre-wrap select-text">
-                      {typeof response.data === 'object'
-                        ? JSON.stringify(response.data)
-                        : String(response.data)}
-                    </pre>
-                  )}
-
-                  {/* HEADERS TAB */}
-                  {resTab === 'headers' && (
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 max-h-[320px] overflow-y-auto space-y-1 font-mono text-xs">
-                      {Object.entries(response.headers).map(([k, v]) => (
-                        <div
-                          key={k}
-                          className="flex items-start justify-between py-1 border-b border-slate-900 last:border-0"
-                        >
-                          <span className="text-cyan-400 font-semibold">{k}:</span>
-                          <span className="text-slate-300 text-right max-w-[60%] break-all">
-                            {v}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            )}
           </div>
-
-          {response && response.error && (
-            <div className="mt-4 p-3 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-300 text-xs font-mono">
-              <strong>Proxy Error:</strong> {response.error}
-            </div>
-          )}
-        </div>
+        </section>
       </div>
     </div>
   );
-};
+}
+
+function AssertionRow({ result }: { result: AssertionResult }) {
+  return (
+    <div
+      className={`flex items-start gap-2 rounded-lg border p-2.5 font-mono text-xs ${
+        result.passed
+          ? 'border-emerald-900 bg-emerald-950/40 text-emerald-300'
+          : 'border-rose-900 bg-rose-950/40 text-rose-300'
+      }`}
+    >
+      {result.passed ? (
+        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      ) : (
+        <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      )}
+      <span>{result.message}</span>
+    </div>
+  );
+}
+
+function AuthPanel({
+  config,
+  onChange,
+}: {
+  config: RequestConfig;
+  onChange: (changes: Partial<RequestConfig>) => void;
+}) {
+  const setAuth = (next: Partial<RequestConfig['authConfig']>) =>
+    onChange({ authConfig: { ...config.authConfig, ...next } });
+
+  const field =
+    'w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 font-mono text-xs text-slate-200 focus:border-cyan-500 focus:outline-none';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <label htmlFor="auth-type" className="font-mono text-xs text-slate-400">
+          Auth type
+        </label>
+        <select
+          id="auth-type"
+          value={config.authType}
+          onChange={(e) => onChange({ authType: e.target.value as AuthType })}
+          className="cursor-pointer rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs font-semibold text-slate-200 focus:border-cyan-500 focus:outline-none"
+        >
+          {(['No Auth', 'API Key', 'Bearer Token', 'Basic Auth'] as AuthType[]).map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <p className="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-[11px] leading-relaxed text-slate-500">
+        Credentials stay in this browser. They are redacted before any AI request, and are excluded
+        from share links and collection exports.
+      </p>
+
+      {config.authType === 'API Key' && (
+        <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950 p-4">
+          <div>
+            <label htmlFor="api-key-name" className="font-mono text-[11px] text-slate-400">
+              Key name
+            </label>
+            <input
+              id="api-key-name"
+              type="text"
+              placeholder="X-API-Key"
+              value={config.authConfig.apiKeyName ?? ''}
+              onChange={(e) => setAuth({ apiKeyName: e.target.value })}
+              className={`mt-1 ${field}`}
+            />
+          </div>
+          <div>
+            <label htmlFor="api-key-value" className="font-mono text-[11px] text-slate-400">
+              Key value
+            </label>
+            <input
+              id="api-key-value"
+              type="password"
+              autoComplete="off"
+              placeholder="Your key, or {{apiKey}}"
+              value={config.authConfig.apiKeyValue ?? ''}
+              onChange={(e) => setAuth({ apiKeyValue: e.target.value })}
+              className={`mt-1 ${field}`}
+            />
+          </div>
+          <fieldset className="flex items-center gap-4 font-mono text-xs text-slate-300">
+            <legend className="sr-only">Where to send the API key</legend>
+            {(['query', 'header'] as const).map((where) => (
+              <label key={where} className="flex cursor-pointer items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="apiKeyIn"
+                  checked={(config.authConfig.apiKeyIn ?? 'query') === where}
+                  onChange={() => setAuth({ apiKeyIn: where })}
+                />
+                <span>In {where === 'query' ? 'query params' : 'headers'}</span>
+              </label>
+            ))}
+          </fieldset>
+        </div>
+      )}
+
+      {config.authType === 'Bearer Token' && (
+        <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950 p-4">
+          <label htmlFor="bearer-token" className="font-mono text-[11px] text-slate-400">
+            Bearer token
+          </label>
+          <input
+            id="bearer-token"
+            type="password"
+            autoComplete="off"
+            placeholder="Your token, or {{token}}"
+            value={config.authConfig.bearerToken ?? ''}
+            onChange={(e) => setAuth({ bearerToken: e.target.value })}
+            className={field}
+          />
+        </div>
+      )}
+
+      {config.authType === 'Basic Auth' && (
+        <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950 p-4">
+          <div>
+            <label htmlFor="basic-user" className="font-mono text-[11px] text-slate-400">
+              Username
+            </label>
+            <input
+              id="basic-user"
+              type="text"
+              autoComplete="off"
+              value={config.authConfig.basicUsername ?? ''}
+              onChange={(e) => setAuth({ basicUsername: e.target.value })}
+              className={`mt-1 ${field}`}
+            />
+          </div>
+          <div>
+            <label htmlFor="basic-pass" className="font-mono text-[11px] text-slate-400">
+              Password
+            </label>
+            <input
+              id="basic-pass"
+              type="password"
+              autoComplete="off"
+              value={config.authConfig.basicPassword ?? ''}
+              onChange={(e) => setAuth({ basicPassword: e.target.value })}
+              className={`mt-1 ${field}`}
+            />
+          </div>
+        </div>
+      )}
+
+      {config.authType === 'No Auth' && (
+        <p className="rounded-xl border border-slate-800 bg-slate-950 py-8 text-center text-xs text-slate-500">
+          No authentication is attached to this request.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BodyPanel({
+  config,
+  onChange,
+  onNotify,
+}: {
+  config: RequestConfig;
+  onChange: (changes: Partial<RequestConfig>) => void;
+  onNotify: (message: string, tone?: 'info' | 'error') => void;
+}) {
+  const formatJson = () => {
+    try {
+      onChange({ body: JSON.stringify(JSON.parse(config.body), null, 2) });
+    } catch (err) {
+      onNotify(`Body is not valid JSON: ${(err as Error).message}`, 'error');
+    }
+  };
+
+  const jsonError = useMemo(() => {
+    if (config.bodyType !== 'json' || !config.body.trim()) return null;
+    try {
+      JSON.parse(config.body);
+      return null;
+    } catch (err) {
+      return (err as Error).message;
+    }
+  }, [config.body, config.bodyType]);
+
+  const methodCarriesBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between font-mono text-xs text-slate-400">
+        <div className="flex items-center gap-2">
+          <label htmlFor="body-type">Body type</label>
+          <select
+            id="body-type"
+            value={config.bodyType}
+            onChange={(e) => onChange({ bodyType: e.target.value as BodyType })}
+            className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 font-semibold text-slate-200"
+          >
+            <option value="none">none</option>
+            <option value="json">JSON</option>
+            <option value="raw">raw</option>
+          </select>
+        </div>
+        {config.bodyType === 'json' && (
+          <button
+            type="button"
+            onClick={formatJson}
+            className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300"
+          >
+            Format
+          </button>
+        )}
+      </div>
+
+      {!methodCarriesBody && config.bodyType !== 'none' && (
+        <p className="rounded-lg border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-xs text-amber-300">
+          {config.method} requests do not carry a body — it will not be sent.
+        </p>
+      )}
+
+      {config.bodyType === 'none' ? (
+        <p className="rounded-xl border border-slate-800 bg-slate-950 py-10 text-center text-xs text-slate-500">
+          No request body. Choose JSON or raw above to add one.
+        </p>
+      ) : (
+        <>
+          <label className="sr-only" htmlFor="request-body">
+            Request body
+          </label>
+          <textarea
+            id="request-body"
+            value={config.body}
+            onChange={(e) => onChange({ body: e.target.value })}
+            placeholder={config.bodyType === 'json' ? '{\n  "key": "value"\n}' : 'Raw payload…'}
+            rows={10}
+            spellCheck={false}
+            className={`w-full rounded-xl border bg-slate-950 p-3 font-mono text-xs leading-relaxed text-slate-200 focus:outline-none ${
+              jsonError
+                ? 'border-rose-700 focus:border-rose-500'
+                : 'border-slate-800 focus:border-cyan-500'
+            }`}
+          />
+          {jsonError && (
+            <p className="font-mono text-[11px] text-rose-400">Invalid JSON: {jsonError}</p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function AssertionsPanel({
+  assertions,
+  response,
+  onChange,
+}: {
+  assertions: Assertion[];
+  response: ApiResponseData | null;
+  onChange: (assertions: Assertion[]) => void;
+}) {
+  const update = (id: string, next: Partial<Assertion>) =>
+    onChange(assertions.map((a) => (a.id === id ? { ...a, ...next } : a)));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-slate-400">
+        <span>Checks run automatically after every send</span>
+        <div className="flex items-center gap-2">
+          {response && (
+            <button
+              type="button"
+              onClick={() => onChange([...assertions, ...suggestAssertions(response)])}
+              className="flex items-center gap-1 font-semibold text-purple-300 hover:text-purple-200"
+            >
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Suggest from response
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              onChange([
+                ...assertions,
+                {
+                  id: `assert-${Date.now()}`,
+                  source: 'status',
+                  operator: 'equals',
+                  expected: '200',
+                  enabled: true,
+                },
+              ])
+            }
+            className="flex items-center gap-1 font-semibold text-cyan-400 hover:text-cyan-300"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            Add
+          </button>
+        </div>
+      </div>
+
+      {assertions.length === 0 ? (
+        <p className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-xs leading-relaxed text-slate-500">
+          No assertions yet. Send a request and use <strong>Suggest from response</strong> to derive
+          them from the real payload — a collection with assertions can be run as a test suite.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {assertions.map((assertion) => (
+            <li
+              key={assertion.id}
+              className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 p-2"
+            >
+              <input
+                type="checkbox"
+                checked={assertion.enabled}
+                onChange={(e) => update(assertion.id, { enabled: e.target.checked })}
+                aria-label={`Enable assertion: ${describeAssertion(assertion)}`}
+                className="cursor-pointer rounded border-slate-700 bg-slate-900 text-cyan-500"
+              />
+              <select
+                value={assertion.source}
+                onChange={(e) =>
+                  update(assertion.id, { source: e.target.value as Assertion['source'] })
+                }
+                aria-label="Assertion source"
+                className="rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 font-mono text-[11px] text-slate-200"
+              >
+                <option value="status">status</option>
+                <option value="duration">duration</option>
+                <option value="header">header</option>
+                <option value="body">body</option>
+                <option value="jsonPath">jsonPath</option>
+              </select>
+              {(assertion.source === 'header' || assertion.source === 'jsonPath') && (
+                <input
+                  type="text"
+                  value={assertion.target ?? ''}
+                  onChange={(e) => update(assertion.id, { target: e.target.value })}
+                  placeholder={assertion.source === 'header' ? 'content-type' : '$.results[0].id'}
+                  aria-label="Assertion target"
+                  className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 font-mono text-[11px] text-slate-200"
+                />
+              )}
+              <select
+                value={assertion.operator}
+                onChange={(e) =>
+                  update(assertion.id, { operator: e.target.value as Assertion['operator'] })
+                }
+                aria-label="Assertion operator"
+                className="rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 font-mono text-[11px] text-slate-200"
+              >
+                {[
+                  'equals',
+                  'notEquals',
+                  'contains',
+                  'notContains',
+                  'lessThan',
+                  'greaterThan',
+                  'exists',
+                  'notExists',
+                  'isArray',
+                  'isNotEmpty',
+                  'matches',
+                ].map((op) => (
+                  <option key={op} value={op}>
+                    {op}
+                  </option>
+                ))}
+              </select>
+              {!['exists', 'notExists', 'isArray', 'isNotEmpty'].includes(assertion.operator) && (
+                <input
+                  type="text"
+                  value={assertion.expected ?? ''}
+                  onChange={(e) => update(assertion.id, { expected: e.target.value })}
+                  placeholder="expected"
+                  aria-label="Expected value"
+                  className="w-24 rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 font-mono text-[11px] text-slate-200"
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => onChange(assertions.filter((a) => a.id !== assertion.id))}
+                aria-label={`Remove assertion: ${describeAssertion(assertion)}`}
+                className="rounded p-1 text-slate-500 hover:text-rose-400"
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

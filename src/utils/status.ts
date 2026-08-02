@@ -29,7 +29,12 @@ export async function loadStatusFile(
     if (!res.ok) return null;
     if (!(res.headers.get('content-type') ?? '').includes('json')) return null;
     const parsed: unknown = await res.json();
-    return isStatusFile(parsed) ? parsed : null;
+    if (!isStatusFile(parsed)) return null;
+    // The repository ships a seed file so there is no 404 on first load. An
+    // empty entry list means the scheduled job has not run yet, which is the
+    // same thing as having no data — callers must render "unverified" rather
+    // than compute 0% uptime from nothing.
+    return parsed.entries.length > 0 ? parsed : null;
   } catch {
     return null;
   }

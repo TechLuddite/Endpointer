@@ -1,362 +1,469 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Header } from './components/Header';
-import { ApiDirectory } from './components/ApiDirectory';
+import { ApiDirectory, configFromApi } from './components/ApiDirectory';
 import { Playground } from './components/Playground';
 import { StatusMonitor } from './components/StatusMonitor';
 import { CollectionsManager } from './components/CollectionsManager';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { EnvironmentManager } from './components/EnvironmentManager';
+import { CommandPalette, type Command } from './components/CommandPalette';
 import { SupportModal } from './components/SupportModal';
 import { PrivacyModal } from './components/PrivacyModal';
 import { Footer } from './components/Footer';
+import { Toasts, type Toast } from './components/Toasts';
 import { PUBLIC_APIS } from './data/publicApis';
-import {
-  RequestConfig,
+import type {
   ApiResponseData,
-  HealthStatusItem,
-  RequestHistoryItem,
+  Capabilities,
   CollectionItem,
+  Environment,
+  HealthStatusItem,
+  PublicApiItem,
+  RequestConfig,
+  RequestHistoryItem,
+  StatusFile,
 } from './types';
 import {
-  getSavedHistory,
-  saveHistoryItem,
   clearHistoryStorage,
-  getSavedCollections,
-  saveCollections,
+  getActiveEnvironmentId,
+  getEnvironments,
   getFavoriteApis,
+  getSavedCollections,
+  getSavedHistory,
+  migrateIfNeeded,
+  saveCollections,
+  saveEnvironments,
+  saveHistoryItem,
+  setActiveEnvironmentId,
   toggleFavoriteApi,
 } from './utils/storage';
-import { buildFullUrl, buildHeadersRecord } from './utils/codeGenerators';
+import { detectCapabilities, proxyEndpoint, UNKNOWN_CAPABILITIES } from './utils/capabilities';
+import { indexStatus, loadStatusFile } from './utils/status';
+import { executeRequest } from './utils/execute';
+import { applyVariables, resolveEnvironment } from './utils/variables';
+import { decodeRequest, encodeRequest } from './utils/shareLink';
+import { TAB_TITLES, useHashRoute, type TabId } from './hooks/useHashRoute';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<
-    'directory' | 'playground' | 'monitor' | 'collections'
-  >('directory');
+  const { route, navigate } = useHashRoute();
 
-  // Storage & State
   const [favorites, setFavorites] = useState<string[]>([]);
   const [history, setHistory] = useState<RequestHistoryItem[]>([]);
-  const [collections, setCollectionsState] = useState<CollectionItem[]>([]);
-  const [healthMap, setHealthMap] = useState<Record<string, HealthStatusItem>>({});
+  const [collections, setCollections] = useState<CollectionItem[]>([]);
+  const [environments, setEnvironments] = useState<Environment[]>([]);
+  const [activeEnvId, setActiveEnvId] = useState<string | null>(null);
 
-  // Playground pre-loaded config
+  const [capabilities, setCapabilities] = useState<Capabilities>(UNKNOWN_CAPABILITIES);
+  const [statusFile, setStatusFile] = useState<StatusFile | null>(null);
+  const [liveResults, setLiveResults] = useState<Record<string, HealthStatusItem>>({});
+
   const [playgroundConfig, setPlaygroundConfig] = useState<RequestConfig | null>(null);
+  const [currentConfig, setCurrentConfig] = useState<RequestConfig | null>(null);
+  const [lastResponse, setLastResponse] = useState<unknown>(null);
 
-  // AI Modal State
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiContext, setAiContext] = useState<any>(null);
+  const [aiModal, setAiModal] = useState<{ open: boolean; prompt: string }>({
+    open: false,
+    prompt: '',
+  });
+  const [envModalOpen, setEnvModalOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  // Footer Modal States
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
-  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const notify = useCallback((message: string, tone: 'info' | 'error' = 'info') => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setToasts((current) => [...current.slice(-3), { id, message, tone }]);
+    setTimeout(() => setToasts((current) => current.filter((t) => t.id !== id)), 6000);
+  }, []);
 
-  // Initialize storage
+  /* ------------------------------ bootstrap ------------------------------ */
+
   useEffect(() => {
+    migrateIfNeeded();
     setFavorites(getFavoriteApis());
     setHistory(getSavedHistory());
-    setCollectionsState(getSavedCollections());
+    setCollections(getSavedCollections());
+    setEnvironments(getEnvironments());
+    setActiveEnvId(getActiveEnvironmentId());
+
+    void detectCapabilities().then(setCapabilities);
+    void loadStatusFile().then(setStatusFile);
   }, []);
 
-  // Update page title dynamically based on active tab
+  const statusById = useMemo(() => indexStatus(statusFile), [statusFile]);
+
+  // Overlay the verified CORS data onto the directory, so the badge reflects
+  // measurement rather than the hand-written value in the source file.
+  const apis = useMemo<PublicApiItem[]>(
+    () =>
+      PUBLIC_APIS.map((api) => {
+        const status = statusById.get(api.id);
+        return status ? { ...api, cors: status.cors } : api;
+      }),
+    [statusById],
+  );
+
+  const environment = useMemo(
+    () => environments.find((env) => env.id === activeEnvId) ?? null,
+    [environments, activeEnvId],
+  );
+
+  /* ------------------------- shared request links ------------------------ */
+
   useEffect(() => {
-    const titleMap: Record<string, string> = {
-      directory: 'Endpointer - Public API Directory & Explorer',
-      playground: 'Endpointer - Interactive REST API Playground',
-      monitor: 'Endpointer - Real-time API Health & Status Monitor',
-      collections: 'Endpointer - Saved API Collections & History',
-    };
-    document.title =
-      titleMap[activeTab] || 'Endpointer - Interactive API Directory & REST Playground';
-  }, [activeTab]);
-
-  const handleToggleFavorite = (id: string) => {
-    const updated = toggleFavoriteApi(id);
-    setFavorites(updated);
-  };
-
-  // Direct playground loader from directory
-  const handleSelectForPlayground = (config: RequestConfig) => {
-    setPlaygroundConfig(config);
-    setActiveTab('playground');
-  };
-
-  // Direct client-side fetch execution (Primary engine for GitHub Pages)
-  const executeDirectFetch = async (config: RequestConfig): Promise<ApiResponseData> => {
-    const start = Date.now();
-    const fullUrl = buildFullUrl(config);
-    const headersRecord = buildHeadersRecord(config);
-
-    const options: RequestInit = {
-      method: config.method,
-      headers: headersRecord,
-    };
-
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method) && config.body) {
-      options.body = config.body;
-    }
-
-    try {
-      const resp = await fetch(fullUrl, options);
-      const duration = Date.now() - start;
-      const contentType = resp.headers.get('content-type') || 'text/plain';
-
-      const responseHeaders: Record<string, string> = {};
-      resp.headers.forEach((val, key) => {
-        responseHeaders[key] = val;
-      });
-
-      const text = await resp.text();
-      let parsed: any = text;
-      if (
-        contentType.includes('application/json') ||
-        text.trim().startsWith('{') ||
-        text.trim().startsWith('[')
-      ) {
-        try {
-          parsed = JSON.parse(text);
-        } catch {
-          parsed = text;
-        }
-      }
-
-      return {
-        ok: resp.ok,
-        status: resp.status,
-        statusText: resp.statusText || (resp.ok ? 'OK' : 'Error'),
-        headers: responseHeaders,
-        data: parsed,
-        contentType,
-        duration,
-        sizeBytes: text.length,
-        timestamp: Date.now(),
-      };
-    } catch (err: any) {
-      const duration = Date.now() - start;
-      return {
-        ok: false,
-        status: 0,
-        statusText: 'CORS / Direct Network Error',
-        headers: {},
-        data: {
-          error: err?.message || 'Direct browser fetch failed.',
-          details:
-            'When hosting on GitHub Pages or static hosts, requests are executed directly in your browser. If the target API endpoint does not return CORS headers (`Access-Control-Allow-Origin: *`), browser security blocks the response.',
-          suggestion:
-            'Ensure the API supports CORS (e.g. Open-Meteo, PokeAPI, JSONPlaceholder, CoinGecko), or use the generated cURL/Fetch snippets in terminal or Postman.',
-        },
-        contentType: 'application/json',
-        duration,
-        sizeBytes: 0,
-        timestamp: Date.now(),
-        error: err?.message || 'Browser CORS Restriction',
-      };
-    }
-  };
-
-  // Direct client ping for static hosts
-  const pingDirectly = async (api: (typeof PUBLIC_APIS)[0]): Promise<HealthStatusItem> => {
-    const start = Date.now();
-    try {
-      const resp = await fetch(api.sampleEndpoint, {
-        method: api.defaultMethod || 'GET',
-        mode: 'cors',
-      });
-      return {
-        id: api.id,
-        url: api.sampleEndpoint,
-        status: resp.status,
-        ok: resp.ok,
-        latency: Date.now() - start,
-        timestamp: Date.now(),
-      };
-    } catch {
-      return {
-        id: api.id,
-        url: api.sampleEndpoint,
-        status: 0,
-        ok: false,
-        latency: Date.now() - start,
-        timestamp: Date.now(),
-        error: 'CORS / Network Error',
-      };
-    }
-  };
-
-  // Execute request (Direct Browser Client as default)
-  const handleExecuteRequest = async (config: RequestConfig): Promise<ApiResponseData> => {
-    let responseData: ApiResponseData;
-
-    if (config.useProxy) {
-      try {
-        const resp = await fetch('/api/proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: config.url,
-            method: config.method,
-            params: config.params
-              .filter((p) => p.enabled && p.key)
-              .reduce((acc: any, curr) => {
-                acc[curr.key] = curr.value;
-                return acc;
-              }, {}),
-            headers: config.headers
-              .filter((h) => h.enabled && h.key)
-              .reduce((acc: any, curr) => {
-                acc[curr.key] = curr.value;
-                return acc;
-              }, {}),
-            body: config.body,
-          }),
-        });
-
-        if (!resp.ok || resp.headers.get('content-type')?.includes('text/html')) {
-          responseData = await executeDirectFetch(config);
-        } else {
-          responseData = await resp.json();
-        }
-      } catch {
-        responseData = await executeDirectFetch(config);
-      }
+    const encoded = route.params.get('r');
+    if (!encoded) return;
+    const decoded = decodeRequest(encoded);
+    if (decoded) {
+      setPlaygroundConfig(decoded);
+      notify('Loaded a shared request. Credentials are never included in a link.');
     } else {
-      responseData = await executeDirectFetch(config);
+      notify('That share link could not be decoded.', 'error');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.params.get('r')]);
 
-    // Save to history
-    const historyItem: RequestHistoryItem = {
-      id: `hist-${Date.now()}`,
-      name: config.name || config.url,
-      timestamp: Date.now(),
-      config,
-      response: responseData,
-    };
-    const updatedHistory = saveHistoryItem(historyItem);
-    setHistory(updatedHistory);
+  useEffect(() => {
+    document.title = `${TAB_TITLES[route.tab]} · Endpointer`;
+  }, [route.tab]);
 
-    return responseData;
-  };
+  /* ---------------------------- request execution ------------------------ */
 
-  // Quick single API ping
-  const handleQuickPing = async (api: (typeof PUBLIC_APIS)[0]) => {
-    const item = await pingDirectly(api);
-    setHealthMap((prev) => ({ ...prev, [api.id]: item }));
-  };
+  const runRequest = useCallback(
+    async (config: RequestConfig, options: { signal: AbortSignal }): Promise<ApiResponseData> => {
+      const vars = resolveEnvironment(environment);
+      const resolved = applyVariables(config, vars);
 
-  // Batch health check for Status Monitor
-  const handleBatchPing = useCallback(async (selectedApis: typeof PUBLIC_APIS) => {
-    const directResults = await Promise.all(selectedApis.map(pingDirectly));
-    const newMap: Record<string, HealthStatusItem> = {};
-    directResults.forEach((r) => {
-      newMap[r.id] = r;
-    });
-    setHealthMap((prev) => ({ ...prev, ...newMap }));
+      const response = await executeRequest(resolved, {
+        signal: options.signal,
+        proxyUrl: proxyEndpoint(capabilities),
+      });
+
+      setLastResponse(response.data);
+
+      // The returned list is the truth; saveHistoryItem sheds weight rather
+      // than reporting an empty history when the quota is hit.
+      setHistory(
+        saveHistoryItem({
+          id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: config.name ?? `${config.method} ${config.url}`,
+          timestamp: Date.now(),
+          config,
+          response,
+        }),
+      );
+
+      return response;
+    },
+    [capabilities, environment],
+  );
+
+  const livePing = useCallback(
+    async (targets: PublicApiItem[]) => {
+      const CONCURRENCY = 6;
+      const queue = [...targets];
+      const results: Record<string, HealthStatusItem> = {};
+
+      const worker = async () => {
+        while (queue.length > 0) {
+          const api = queue.shift();
+          if (!api) return;
+          const started = Date.now();
+          const controller = new AbortController();
+          const response = await executeRequest(
+            { ...configFromApi(api), useProxy: false },
+            { signal: controller.signal, timeoutMs: 8000, proxyUrl: null },
+          );
+          results[api.id] = {
+            id: api.id,
+            url: api.sampleEndpoint,
+            status: response.status,
+            ok: response.ok,
+            latency: Date.now() - started,
+            timestamp: Date.now(),
+            error: response.error,
+          };
+        }
+      };
+
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, targets.length) }, () => worker()),
+      );
+      setLiveResults((current) => ({ ...current, ...results }));
+      const reachable = Object.values(results).filter((r) => r.ok).length;
+      notify(`Pinged ${targets.length} endpoints from your browser — ${reachable} responded.`);
+    },
+    [notify],
+  );
+
+  /* ------------------------------- handlers ------------------------------ */
+
+  const openInPlayground = useCallback(
+    (config: RequestConfig) => {
+      setPlaygroundConfig(config);
+      navigate('playground');
+    },
+    [navigate],
+  );
+
+  const persistCollections = useCallback(
+    (next: CollectionItem[]) => {
+      setCollections(next);
+      const result = saveCollections(next);
+      if (!result.ok) {
+        notify(
+          result.reason === 'quota'
+            ? 'Browser storage is full — remove some collections or history.'
+            : 'Storage is unavailable, so this change will not survive a reload.',
+          'error',
+        );
+      }
+    },
+    [notify],
+  );
+
+  const persistEnvironments = useCallback((next: Environment[]) => {
+    setEnvironments(next);
+    saveEnvironments(next);
   }, []);
 
-  // Save to collection
-  const handleSaveToCollection = (config: RequestConfig, _response?: ApiResponseData) => {
-    const updatedCols = [...collections];
-    if (updatedCols.length === 0) {
-      updatedCols.push({
-        id: `col-${Date.now()}`,
-        name: 'My Saved Requests',
-        description: 'Default saved endpoints',
-        createdAt: Date.now(),
-        requests: [config],
-      });
-    } else {
-      updatedCols[0].requests.push(config);
-    }
+  const selectEnvironment = useCallback((id: string | null) => {
+    setActiveEnvId(id);
+    setActiveEnvironmentId(id);
+  }, []);
 
-    saveCollections(updatedCols);
-    setCollectionsState(updatedCols);
-    alert('Request saved to collection!');
-  };
+  /**
+   * Save into a chosen collection, without mutating existing state objects. The
+   * previous version shallow-copied the array and then pushed into
+   * `updatedCols[0].requests`, mutating the live object, and always targeted
+   * collection zero with no way to pick.
+   */
+  const saveToCollection = useCallback(
+    (config: RequestConfig) => {
+      const target =
+        collections.length === 1
+          ? collections[0]
+          : collections.find(
+              (c) =>
+                c.name ===
+                window.prompt(
+                  `Save to which collection?\n\n${collections.map((c) => `• ${c.name}`).join('\n')}`,
+                  collections[0]?.name ?? '',
+                ),
+            );
 
-  const handleClearHistory = () => {
-    clearHistoryStorage();
-    setHistory([]);
-  };
+      if (collections.length === 0) {
+        persistCollections([
+          {
+            id: `col-${Date.now()}`,
+            name: 'My requests',
+            description: 'Saved from the playground',
+            createdAt: Date.now(),
+            requests: [config],
+          },
+        ]);
+        notify('Created “My requests” and saved this request.');
+        return;
+      }
 
-  const handleOpenAiModal = (prompt?: string, context?: any) => {
-    if (prompt) setAiPrompt(prompt);
-    if (context) setAiContext(context);
-    setIsAiModalOpen(true);
-  };
+      if (!target) {
+        notify('Save cancelled.');
+        return;
+      }
+
+      persistCollections(
+        collections.map((collection) =>
+          collection.id === target.id
+            ? { ...collection, requests: [...collection.requests, { ...config }] }
+            : collection,
+        ),
+      );
+      notify(`Saved to “${target.name}”.`);
+    },
+    [collections, persistCollections, notify],
+  );
+
+  /* --------------------------- command palette --------------------------- */
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const commands = useMemo<Command[]>(() => {
+    const tabCommands: Command[] = (Object.keys(TAB_TITLES) as TabId[]).map((tab) => ({
+      id: `tab-${tab}`,
+      group: 'Go to',
+      label: TAB_TITLES[tab],
+      run: () => navigate(tab),
+    }));
+
+    const apiCommands: Command[] = apis.map((api) => ({
+      id: `api-${api.id}`,
+      group: 'API',
+      label: api.name,
+      hint: statusById.get(api.id)?.cors === 'yes' ? 'browser-ready' : undefined,
+      run: () => openInPlayground(configFromApi(api)),
+    }));
+
+    const actionCommands: Command[] = [
+      {
+        id: 'action-share',
+        group: 'Action',
+        label: 'Copy share link for the current request',
+        run: () => {
+          if (!currentConfig) return notify('Open a request first.', 'error');
+          void navigator.clipboard
+            .writeText(
+              `${window.location.origin}${window.location.pathname}#/playground?r=${encodeRequest(currentConfig)}`,
+            )
+            .then(() => notify('Share link copied.'));
+        },
+      },
+      {
+        id: 'action-env',
+        group: 'Action',
+        label: 'Manage environments and variables',
+        run: () => setEnvModalOpen(true),
+      },
+      {
+        id: 'action-analyse',
+        group: 'Action',
+        label: 'Analyse the last response',
+        run: () => setAiModal({ open: true, prompt: 'Analyse this response payload.' }),
+      },
+      {
+        id: 'action-privacy',
+        group: 'Action',
+        label: 'Privacy policy',
+        run: () => setPrivacyOpen(true),
+      },
+    ];
+
+    return [...tabCommands, ...actionCommands, ...apiCommands];
+  }, [apis, statusById, navigate, openInPlayground, currentConfig, notify]);
+
+  /* -------------------------------- render ------------------------------- */
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-slate-950 flex flex-col">
-      {/* Navbar Header */}
+    <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-cyan-500 focus:px-4 focus:py-2 focus:font-semibold focus:text-slate-950"
+      >
+        Skip to content
+      </a>
+
       <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        apiCount={PUBLIC_APIS.length}
-        openAiModal={() => handleOpenAiModal()}
+        activeTab={route.tab}
+        onNavigate={navigate}
+        apiCount={apis.length}
         historyCount={history.length}
+        capabilities={capabilities}
+        environments={environments}
+        activeEnvironmentId={activeEnvId}
+        onSelectEnvironment={selectEnvironment}
+        onOpenEnvironments={() => setEnvModalOpen(true)}
+        onOpenAiModal={() => setAiModal({ open: true, prompt: 'Analyse this response payload.' })}
+        onOpenPalette={() => setPaletteOpen(true)}
       />
 
-      {/* Main View Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        {activeTab === 'directory' && (
+      <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 sm:px-6 lg:px-8">
+        {route.tab === 'directory' && (
           <ApiDirectory
-            apis={PUBLIC_APIS}
+            apis={apis}
             favorites={favorites}
-            onToggleFavorite={handleToggleFavorite}
-            onSelectForPlayground={handleSelectForPlayground}
-            healthMap={healthMap}
-            onQuickPing={handleQuickPing}
+            statusById={statusById}
+            statusFile={statusFile}
+            onToggleFavorite={(id) => setFavorites(toggleFavoriteApi(id))}
+            onSelectForPlayground={openInPlayground}
           />
         )}
 
-        {activeTab === 'playground' && (
+        {route.tab === 'playground' && (
           <Playground
             initialConfig={playgroundConfig}
-            onExecuteRequest={handleExecuteRequest}
-            onSaveToCollection={handleSaveToCollection}
-            openAiModalWithContext={(prompt, context) => handleOpenAiModal(prompt, context)}
+            capabilities={capabilities}
+            environment={environment}
+            onExecuteRequest={runRequest}
+            onSaveToCollection={saveToCollection}
+            onOpenAiModal={(prompt, context) => {
+              setLastResponse(context);
+              setAiModal({ open: true, prompt });
+            }}
+            onConfigChange={setCurrentConfig}
+            onNotify={notify}
           />
         )}
 
-        {activeTab === 'monitor' && (
+        {route.tab === 'monitor' && (
           <StatusMonitor
-            apis={PUBLIC_APIS}
-            healthMap={healthMap}
-            onBatchPing={handleBatchPing}
-            onSelectForPlayground={handleSelectForPlayground}
+            apis={apis}
+            statusById={statusById}
+            statusFile={statusFile}
+            liveResults={liveResults}
+            onLivePing={livePing}
+            onSelectForPlayground={openInPlayground}
           />
         )}
 
-        {activeTab === 'collections' && (
+        {route.tab === 'collections' && (
           <CollectionsManager
             collections={collections}
             history={history}
-            onSelectRequestForPlayground={handleSelectForPlayground}
-            onClearHistory={handleClearHistory}
-            onSaveCollections={(cols) => {
-              saveCollections(cols);
-              setCollectionsState(cols);
+            environment={environment}
+            onSaveCollections={persistCollections}
+            onSelectRequestForPlayground={openInPlayground}
+            onClearHistory={() => {
+              clearHistoryStorage();
+              setHistory([]);
+              notify('History cleared.');
             }}
+            onExecuteRequest={runRequest}
+            onNotify={notify}
           />
         )}
       </main>
 
-      {/* AI Assistant Modal */}
       <AiAssistantModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        initialPrompt={aiPrompt}
-        initialContext={aiContext}
+        isOpen={aiModal.open}
+        onClose={() => setAiModal({ open: false, prompt: '' })}
+        capabilities={capabilities}
+        initialPrompt={aiModal.prompt}
+        context={lastResponse}
       />
 
-      {/* Developer Support Modal */}
-      <SupportModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
+      <EnvironmentManager
+        isOpen={envModalOpen}
+        onClose={() => setEnvModalOpen(false)}
+        environments={environments}
+        activeId={activeEnvId}
+        onSave={persistEnvironments}
+        onSelect={selectEnvironment}
+      />
 
-      {/* Privacy Policy Modal */}
-      <PrivacyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
+      <CommandPalette
+        isOpen={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        commands={commands}
+      />
 
-      {/* Application Footer with Support & Privacy Buttons */}
+      <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
+      <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+
+      <Toasts toasts={toasts} onDismiss={(id) => setToasts((c) => c.filter((t) => t.id !== id))} />
+
       <Footer
-        onOpenSupport={() => setIsSupportModalOpen(true)}
-        onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
+        capabilities={capabilities}
+        onOpenSupport={() => setSupportOpen(true)}
+        onOpenPrivacy={() => setPrivacyOpen(true)}
       />
     </div>
   );

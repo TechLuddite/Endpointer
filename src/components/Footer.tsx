@@ -1,67 +1,71 @@
-import React from 'react';
-import { Heart, ShieldCheck, Github, Terminal } from 'lucide-react';
+import { Github, Heart, ShieldCheck, Terminal } from 'lucide-react';
+import type { Capabilities } from '../types';
 
 interface FooterProps {
+  capabilities: Capabilities;
   onOpenSupport: () => void;
   onOpenPrivacy: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenSupport, onOpenPrivacy }) => {
+export function Footer({ capabilities, onOpenSupport, onOpenPrivacy }: FooterProps) {
   return (
-    <footer className="border-t border-slate-900 bg-slate-950/90 py-6 px-4 md:px-8 text-xs font-mono text-slate-400 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Left branding */}
+    <footer className="border-t border-slate-900 bg-slate-950/90 px-4 py-6 font-mono text-xs text-slate-400 backdrop-blur-md md:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
-            <Terminal className="w-3.5 h-3.5" />
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white">
+            <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-200">Endpointer</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/60 font-mono">
-                Static & GH Pages
-              </span>
-            </div>
+            <span className="font-bold text-slate-200">Endpointer</span>
             <p className="text-[11px] text-slate-500">
-              Interactive API Playground & Real-Time Health Tester
+              {/* States the actual deployment shape rather than a fixed badge. */}
+              {capabilities.proxy.available
+                ? 'Browser client + proxy'
+                : 'Runs entirely in your browser'}
             </p>
           </div>
         </div>
 
-        {/* Middle Footer Buttons (Support and Privacy ONLY in footer) */}
         <div className="flex flex-wrap items-center gap-3">
           <button
+            type="button"
             onClick={onOpenSupport}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/30 hover:border-pink-400 text-pink-300 hover:text-pink-200 font-semibold transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-1.5 rounded-xl border border-pink-500/30 bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-purple-500/10 px-3 py-1.5 font-semibold text-pink-300 transition-all hover:border-pink-400 hover:text-pink-200 active:scale-95"
           >
-            <Heart className="w-3.5 h-3.5 text-pink-400 fill-current" />
-            <span>Dev Support</span>
+            <Heart className="h-3.5 w-3.5 fill-current text-pink-400" aria-hidden="true" />
+            Support
           </button>
-
           <button
+            type="button"
             onClick={onOpenPrivacy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 font-semibold transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 font-semibold text-slate-300 transition-all hover:border-emerald-500/50 hover:text-emerald-300 active:scale-95"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Privacy Policy</span>
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+            Privacy
           </button>
         </div>
 
-        {/* Right GitHub link & copyright */}
-        <div className="flex items-center gap-4 text-slate-500 text-[11px]">
+        <div className="flex items-center gap-4 text-[11px] text-slate-500">
           <a
             href="https://github.com/TechLuddite/Endpointer"
             target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-slate-400 hover:text-cyan-300 transition-colors"
+            rel="noreferrer noopener"
+            className="flex items-center gap-1.5 text-slate-400 transition-colors hover:text-cyan-300"
           >
-            <Github className="w-4 h-4" />
-            <span>GitHub Repo</span>
+            <Github className="h-4 w-4" aria-hidden="true" />
+            Source
           </a>
-          <span>•</span>
-          <span>Open Source MIT</span>
+          <span aria-hidden="true">·</span>
+          <a
+            href="https://github.com/TechLuddite/Endpointer/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="transition-colors hover:text-slate-300"
+          >
+            MIT
+          </a>
         </div>
       </div>
     </footer>
   );
-};
+}

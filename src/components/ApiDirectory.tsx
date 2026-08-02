@@ -1,40 +1,39 @@
-import React, { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
+  BookOpen,
+  CloudSun,
+  Code,
+  Coins,
+  Database,
+  Dog,
+  ExternalLink,
+  Filter,
+  Gamepad2,
+  Globe,
+  Grid,
+  Key,
+  Newspaper,
+  Play,
+  Quote,
   Search,
   Star,
-  ExternalLink,
-  Play,
-  Clock,
-  Shield,
-  Key,
-  Sparkles,
-  Filter,
-  CloudSun,
-  Database,
-  Coins,
-  Gamepad2,
-  Dog,
-  Code,
-  Quote,
-  Newspaper,
-  Grid,
   Utensils,
-  BookOpen,
-  Globe,
 } from 'lucide-react';
-import { PublicApiItem, HealthStatusItem, RequestConfig } from '../types';
+import type { PublicApiItem, RequestConfig, StatusEntry, StatusFile } from '../types';
 import { API_CATEGORIES } from '../data/publicApis';
+import { corsBadge, formatAge } from '../utils/status';
+import { splitUrl } from '../utils/requestUrl';
 
 interface ApiDirectoryProps {
   apis: PublicApiItem[];
   favorites: string[];
+  statusById: Map<string, StatusEntry>;
+  statusFile: StatusFile | null;
   onToggleFavorite: (id: string) => void;
   onSelectForPlayground: (config: RequestConfig) => void;
-  healthMap: Record<string, HealthStatusItem>;
-  onQuickPing: (api: PublicApiItem) => void;
 }
 
-const CATEGORY_ICONS: Record<string, React.FC<{ className?: string }>> = {
+const CATEGORY_ICONS: Record<string, typeof Grid> = {
   Grid,
   CloudSun,
   Database,
@@ -49,341 +48,356 @@ const CATEGORY_ICONS: Record<string, React.FC<{ className?: string }>> = {
   Globe,
 };
 
-export const ApiDirectory: React.FC<ApiDirectoryProps> = ({
+const BADGE_STYLES = {
+  yes: 'border-emerald-800 bg-emerald-950/80 text-emerald-300',
+  no: 'border-amber-800 bg-amber-950/80 text-amber-300',
+  unknown: 'border-slate-700 bg-slate-900 text-slate-400',
+} as const;
+
+type BrowserFilter = 'all' | 'browser-ready' | 'no-auth';
+
+/**
+ * Build a playground config from a directory entry.
+ *
+ * The sample endpoint's query string is split out into params rather than being
+ * left in the URL *and* duplicated by defaultParams — which is exactly what
+ * made every "Test endpoint" click send each parameter twice.
+ */
+export function configFromApi(api: PublicApiItem): RequestConfig {
+  const { base, params } = splitUrl(api.sampleEndpoint);
+  const existingKeys = new Set(params.map((p) => p.key));
+
+  for (const [index, param] of (api.defaultParams ?? []).entries()) {
+    if (existingKeys.has(param.key)) {
+      // Attach the documentation to the row that already exists.
+      const row = params.find((p) => p.key === param.key);
+      if (row && param.description) row.description = param.description;
+      continue;
+    }
+    params.push({
+      id: `default-${index}`,
+      key: param.key,
+      value: param.value,
+      enabled: false, // extras are offered, not silently applied
+      description: param.description,
+    });
+    existingKeys.add(param.key);
+  }
+
+  return {
+    name: api.name,
+    method: api.defaultMethod ?? 'GET',
+    url: base,
+    params,
+    headers: (api.defaultHeaders ?? []).map((h, index) => ({
+      id: `dh-${index}`,
+      key: h.key,
+      value: h.value,
+      enabled: true,
+    })),
+    authType: api.auth,
+    authConfig: { apiKeyIn: 'query' },
+    bodyType: api.defaultBody ? 'json' : 'none',
+    body: api.defaultBody ?? '',
+    // Only meaningful when a proxy exists; the toggle reflects availability.
+    useProxy: false,
+  };
+}
+
+export function ApiDirectory({
   apis,
   favorites,
+  statusById,
+  statusFile,
   onToggleFavorite,
   onSelectForPlayground,
-  healthMap,
-  onQuickPing,
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedAuth, setSelectedAuth] = useState<string>('all');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+}: ApiDirectoryProps) {
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [browserFilter, setBrowserFilter] = useState<BrowserFilter>('all');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
-  // Filter logic
-  const filteredApis = useMemo(() => {
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
     return apis.filter((api) => {
-      // Search
       const matchesSearch =
-        searchTerm === '' ||
-        api.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        api.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        api.tags.some((t) => t.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        api.baseUrl.toLowerCase().includes(searchTerm.toLowerCase());
+        !query ||
+        api.name.toLowerCase().includes(query) ||
+        api.description.toLowerCase().includes(query) ||
+        api.baseUrl.toLowerCase().includes(query) ||
+        api.tags.some((tag) => tag.toLowerCase().includes(query));
 
-      // Category
-      const matchesCategory = selectedCategory === 'all' || api.category === selectedCategory;
+      const matchesCategory = category === 'all' || api.category === category;
+      const status = statusById.get(api.id);
+      const matchesBrowser =
+        browserFilter === 'all' ||
+        (browserFilter === 'no-auth' && api.auth === 'No Auth') ||
+        (browserFilter === 'browser-ready' && status?.cors === 'yes' && status.ok);
+      const matchesFavorite = !favoritesOnly || favorites.includes(api.id);
 
-      // Auth
-      const matchesAuth =
-        selectedAuth === 'all' ||
-        (selectedAuth === 'no-auth' && api.auth === 'No Auth') ||
-        (selectedAuth === 'api-key' && api.auth === 'API Key');
-
-      // Favorites
-      const matchesFavorite = !showFavoritesOnly || favorites.includes(api.id);
-
-      return matchesSearch && matchesCategory && matchesAuth && matchesFavorite;
+      return matchesSearch && matchesCategory && matchesBrowser && matchesFavorite;
     });
-  }, [apis, searchTerm, selectedCategory, selectedAuth, showFavoritesOnly, favorites]);
+  }, [apis, search, category, browserFilter, favoritesOnly, favorites, statusById]);
 
-  // Handle loading sample endpoint into playground
-  const handleLoadPlayground = (api: PublicApiItem) => {
-    const config: RequestConfig = {
-      name: api.name,
-      method: api.defaultMethod || 'GET',
-      url: api.sampleEndpoint,
-      params: (api.defaultParams || []).map((p, idx) => ({
-        id: String(idx + 1),
-        key: p.key,
-        value: p.value,
-        enabled: true,
-        description: p.description,
-      })),
-      headers: (api.defaultHeaders || []).map((h, idx) => ({
-        id: String(idx + 1),
-        key: h.key,
-        value: h.value,
-        enabled: true,
-      })),
-      authType: api.auth,
-      authConfig: {
-        apiKeyName: api.auth === 'API Key' ? 'api_key' : '',
-        apiKeyValue: api.auth === 'API Key' ? 'DEMO_KEY' : '',
-        apiKeyIn: 'query',
-      },
-      bodyType: api.defaultBody ? 'json' : 'none',
-      body: api.defaultBody || '',
-      useProxy: true,
-    };
-
-    onSelectForPlayground(config);
-  };
+  const summary = statusFile?.summary;
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Hero Header & Stats */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 p-6 sm:p-8 shadow-xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
-
-        <div className="relative z-10 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+      <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 shadow-xl sm:p-8">
+        <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="relative space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Public API Directory & Live Inspector</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-100 tracking-tight">
-                Explore & Test Public APIs Real-Time
+              <h1 className="text-2xl font-black tracking-tight text-slate-100 sm:text-3xl">
+                Public API directory
               </h1>
-              <p className="text-slate-400 text-sm max-w-2xl mt-1">
-                Browse curated REST APIs, test response payloads with zero CORS blocks, check
-                real-time uptime health, and generate instant code snippets.
+              <p className="mt-1 max-w-2xl text-sm text-slate-400">
+                {summary ? (
+                  <>
+                    Every endpoint re-verified automatically. Last check{' '}
+                    {formatAge(statusFile?.generatedAt)}.
+                  </>
+                ) : (
+                  <>
+                    Reachability and browser compatibility are verified by a scheduled job. No
+                    results yet — the badges will fill in after the first run.
+                  </>
+                )}
               </p>
             </div>
 
-            {/* Metric Cards */}
-            <div className="flex items-center gap-3">
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center min-w-[100px]">
-                <div className="text-xl font-bold text-cyan-400">{apis.length}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                  Total APIs
-                </div>
-              </div>
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center min-w-[100px]">
-                <div className="text-xl font-bold text-emerald-400">
-                  {apis.filter((a) => a.auth === 'No Auth').length}
-                </div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                  No Auth Needed
-                </div>
-              </div>
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center min-w-[100px]">
-                <div className="text-xl font-bold text-purple-400">100%</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                  HTTPS Safe
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Stat label="APIs" value={apis.length} tone="text-cyan-400" />
+              <Stat
+                label="Browser-ready"
+                value={summary ? summary.browserUsable : '—'}
+                tone="text-emerald-400"
+                title="Verified to send CORS headers, so they work directly from this page."
+              />
+              <Stat
+                label="No auth"
+                value={apis.filter((a) => a.auth === 'No Auth').length}
+                tone="text-purple-400"
+              />
+              {summary && summary.failing > 0 && (
+                <Stat label="Unreachable" value={summary.failing} tone="text-rose-400" />
+              )}
             </div>
           </div>
 
-          {/* Search Bar & Secondary Controls */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                id="search-api-input"
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search APIs by name, category, domain, or tag (e.g., weather, pokemon, crypto)..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 rounded-xl text-slate-200 text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+          <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
               />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded"
-                >
-                  Clear
-                </button>
-              )}
+              <label className="sr-only" htmlFor="directory-search">
+                Search APIs
+              </label>
+              <input
+                id="directory-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, tag or domain…"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/90 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 transition-all focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              />
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-              {/* Auth Filter */}
+            <div className="flex items-center gap-2">
+              <label className="sr-only" htmlFor="browser-filter">
+                Filter by compatibility
+              </label>
               <select
-                id="filter-auth-select"
-                value={selectedAuth}
-                onChange={(e) => setSelectedAuth(e.target.value)}
-                className="bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                id="browser-filter"
+                value={browserFilter}
+                onChange={(e) => setBrowserFilter(e.target.value as BrowserFilter)}
+                className="cursor-pointer rounded-xl border border-slate-800 bg-slate-950/90 px-3 py-2.5 text-xs text-slate-300 focus:border-cyan-500 focus:outline-none"
               >
-                <option value="all">All Auth Types</option>
-                <option value="no-auth">No Auth Required</option>
-                <option value="api-key">API Key Required</option>
+                <option value="all">All APIs</option>
+                <option value="browser-ready">Browser-ready only</option>
+                <option value="no-auth">No auth required</option>
               </select>
 
-              {/* Favorites Toggle Button */}
               <button
-                id="btn-favorites-toggle"
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-medium transition-all whitespace-nowrap ${
-                  showFavoritesOnly
-                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-semibold'
-                    : 'bg-slate-950/90 border-slate-800 text-slate-400 hover:text-slate-200'
+                type="button"
+                onClick={() => setFavoritesOnly((v) => !v)}
+                aria-pressed={favoritesOnly}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-2.5 text-xs font-medium transition-all ${
+                  favoritesOnly
+                    ? 'border-amber-500/50 bg-amber-500/20 font-semibold text-amber-300'
+                    : 'border-slate-800 bg-slate-950/90 text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Star
-                  className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`}
+                  className={`h-3.5 w-3.5 ${favoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`}
+                  aria-hidden="true"
                 />
-                <span>Starred ({favorites.length})</span>
+                Starred ({favorites.length})
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Category Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-800">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {API_CATEGORIES.map((cat) => {
-          const IconComp = CATEGORY_ICONS[cat.icon] || Grid;
-          const isSelected = selectedCategory === cat.id;
-
+          const Icon = CATEGORY_ICONS[cat.icon] ?? Grid;
+          const selected = category === cat.id;
           return (
             <button
               key={cat.id}
-              id={`cat-tab-${cat.id}`}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${
-                isSelected
-                  ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-300 font-semibold shadow-sm'
-                  : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+              type="button"
+              onClick={() => setCategory(cat.id)}
+              aria-pressed={selected}
+              title={cat.description}
+              className={`flex items-center gap-2 whitespace-nowrap rounded-xl border px-3.5 py-2 text-xs font-medium transition-all ${
+                selected
+                  ? 'border-cyan-500/50 bg-cyan-500/10 font-semibold text-cyan-300'
+                  : 'border-slate-800/80 bg-slate-900/60 text-slate-400 hover:bg-slate-900 hover:text-slate-200'
               }`}
             >
-              <IconComp
-                className={`w-3.5 h-3.5 ${isSelected ? 'text-cyan-400' : 'text-slate-400'}`}
-              />
-              <span>{cat.name}</span>
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+              {cat.name}
             </button>
           );
         })}
       </div>
 
-      {/* API Cards Grid */}
-      {filteredApis.length === 0 ? (
-        <div className="text-center py-16 bg-slate-900/40 border border-slate-800/60 rounded-2xl p-8 space-y-3">
-          <Filter className="w-10 h-10 text-slate-600 mx-auto" />
-          <h3 className="text-lg font-bold text-slate-300">No APIs found matching filters</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Try adjusting your search query or selecting a different category filter.
-          </p>
+      {filtered.length === 0 ? (
+        <div className="space-y-3 rounded-2xl border border-slate-800/60 bg-slate-900/40 p-8 text-center">
+          <Filter className="mx-auto h-10 w-10 text-slate-600" aria-hidden="true" />
+          <h2 className="text-lg font-bold text-slate-300">Nothing matches those filters</h2>
           <button
+            type="button"
             onClick={() => {
-              setSearchTerm('');
-              setSelectedCategory('all');
-              setSelectedAuth('all');
-              setShowFavoritesOnly(false);
+              setSearch('');
+              setCategory('all');
+              setBrowserFilter('all');
+              setFavoritesOnly(false);
             }}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-semibold rounded-xl border border-slate-700"
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-cyan-400 hover:bg-slate-700"
           >
-            Reset All Filters
+            Reset filters
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {filteredApis.map((api) => {
-            const isFav = favorites.includes(api.id);
-            const health = healthMap[api.id];
+        <ul className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((api) => {
+            const isFavorite = favorites.includes(api.id);
+            const status = statusById.get(api.id);
+            const badge = corsBadge(status);
 
             return (
-              <div
+              <li
                 key={api.id}
-                id={`api-card-${api.id}`}
-                className="group relative bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-xl hover:shadow-cyan-950/20"
+                className="group flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/80 p-5 transition-all hover:border-slate-700 hover:bg-slate-900 hover:shadow-xl hover:shadow-cyan-950/20"
               >
                 <div>
-                  {/* Top Bar: Name, Health Status, Star */}
-                  <div className="flex items-start justify-between gap-3 mb-2.5">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-base text-slate-100 group-hover:text-cyan-300 transition-colors">
-                        {api.name}
-                      </h3>
-
-                      {/* Health Indicator Ping */}
-                      {health ? (
-                        <div
-                          className={`flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${
-                            health.ok
-                              ? 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
-                              : 'bg-rose-950/80 border-rose-800 text-rose-300'
-                          }`}
-                          title={`Last status: ${health.status} (${health.latency}ms)`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${health.ok ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}
-                          />
-                          <span>{health.ok ? `${health.latency}ms` : 'Error'}</span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => onQuickPing(api)}
-                          className="text-[10px] text-slate-500 hover:text-cyan-400 border border-slate-800 hover:border-slate-700 bg-slate-950 px-2 py-0.5 rounded-full flex items-center gap-1 transition-all"
-                          title="Quick ping status test"
-                        >
-                          <Clock className="w-2.5 h-2.5" />
-                          <span>Ping</span>
-                        </button>
-                      )}
-                    </div>
-
+                  <div className="mb-2.5 flex items-start justify-between gap-3">
+                    <h3 className="font-bold text-slate-100 transition-colors group-hover:text-cyan-300">
+                      {api.name}
+                    </h3>
                     <button
-                      id={`btn-star-${api.id}`}
+                      type="button"
                       onClick={() => onToggleFavorite(api.id)}
-                      className="text-slate-500 hover:text-amber-400 p-1 transition-colors"
-                      title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                      aria-label={isFavorite ? `Unstar ${api.name}` : `Star ${api.name}`}
+                      aria-pressed={isFavorite}
+                      className="p-1 text-slate-500 transition-colors hover:text-amber-400"
                     >
-                      <Star className={`w-4 h-4 ${isFav ? 'fill-amber-400 text-amber-400' : ''}`} />
+                      <Star
+                        className={`h-4 w-4 ${isFavorite ? 'fill-amber-400 text-amber-400' : ''}`}
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-xs text-slate-400 line-clamp-2 mb-3 leading-relaxed">
+                  <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-medium ${BADGE_STYLES[badge.level]}`}
+                      title={badge.detail}
+                    >
+                      {badge.label}
+                    </span>
+                    {status?.ok && (
+                      <span
+                        className="rounded-full border border-slate-700 bg-slate-950 px-2 py-0.5 font-mono text-[10px] text-slate-400"
+                        title={`${status.uptimePercent}% of ${status.samples} scheduled checks succeeded`}
+                      >
+                        {status.p50Latency}ms · {status.uptimePercent}% up
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-slate-400">
                     {api.description}
                   </p>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                    {api.tags.map((tag) => (
+                  <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                    {api.tags.slice(0, 4).map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] font-mono bg-slate-950 text-slate-400 border border-slate-800 px-2 py-0.5 rounded-md"
+                        className="rounded-md border border-slate-800 bg-slate-950 px-2 py-0.5 font-mono text-[10px] text-slate-400"
                       >
                         #{tag}
                       </span>
                     ))}
                   </div>
 
-                  {/* Meta Specs */}
-                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/80 mb-4 font-mono">
-                    <div className="flex items-center gap-1.5 text-slate-400">
-                      <Key className="w-3 h-3 text-cyan-400" />
-                      <span className="text-slate-300 font-semibold">{api.auth}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-slate-400">
-                      <Shield className="w-3 h-3 text-emerald-400" />
-                      <span className="text-slate-300">HTTPS Safe</span>
-                    </div>
-                  </div>
+                  <p className="mb-4 flex items-center gap-1.5 rounded-xl border border-slate-800/80 bg-slate-950/60 p-2.5 font-mono text-[11px] text-slate-400">
+                    <Key className="h-3 w-3 text-cyan-400" aria-hidden="true" />
+                    <span className="font-semibold text-slate-300">{api.auth}</span>
+                    <span className="text-slate-600">·</span>
+                    <span>{api.https ? 'HTTPS' : 'HTTP'}</span>
+                  </p>
                 </div>
 
-                {/* Card Footer Actions */}
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 border-t border-slate-800/80 pt-3">
                   <a
                     href={api.documentationUrl}
                     target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors px-2 py-1"
+                    rel="noreferrer noopener"
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 transition-colors hover:text-slate-200"
                   >
-                    <span>Docs</span>
-                    <ExternalLink className="w-3 h-3" />
+                    Docs
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   </a>
-
                   <button
-                    id={`btn-test-playground-${api.id}`}
-                    onClick={() => handleLoadPlayground(api)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-slate-100 text-xs font-semibold shadow-md shadow-cyan-600/20 transition-all active:scale-95"
+                    type="button"
+                    onClick={() => onSelectForPlayground(configFromApi(api))}
+                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-slate-100 shadow-md shadow-cyan-600/20 transition-all hover:from-cyan-500 hover:to-indigo-500 active:scale-95"
                   >
-                    <Play className="w-3 h-3 fill-slate-100" />
-                    <span>Test Endpoint</span>
+                    <Play className="h-3 w-3 fill-slate-100" aria-hidden="true" />
+                    Open
                   </button>
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );
-};
+}
+
+function Stat({
+  label,
+  value,
+  tone,
+  title,
+}: {
+  label: string;
+  value: number | string;
+  tone: string;
+  title?: string;
+}) {
+  return (
+    <div
+      title={title}
+      className="min-w-[92px] rounded-xl border border-slate-800 bg-slate-900/80 p-3 text-center"
+    >
+      <div className={`text-xl font-bold ${tone}`}>{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
+    </div>
+  );
+}

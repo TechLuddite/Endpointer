@@ -1,268 +1,312 @@
-import { RequestConfig, CodeLanguage } from '../types';
+import type { CodeLanguage, RequestConfig } from '../types';
+import { joinUrl } from './requestUrl';
 
+/**
+ * Build the full request URL.
+ *
+ * `config.url` carries no query string (see requestUrl.ts), so this is a plain
+ * join rather than the old append-onto-whatever-is-already-there, which
+ * duplicated every parameter that appeared in both places.
+ */
 export function buildFullUrl(config: RequestConfig): string {
-  try {
-    const urlObj = new URL(config.url);
+  const params = [...config.params];
 
-    // Add enabled query params
-    config.params.forEach((param) => {
-      if (param.enabled && param.key) {
-        urlObj.searchParams.append(param.key, param.value);
-      }
+  if (
+    config.authType === 'API Key' &&
+    config.authConfig.apiKeyIn === 'query' &&
+    config.authConfig.apiKeyName
+  ) {
+    params.push({
+      id: 'auth-api-key',
+      key: config.authConfig.apiKeyName,
+      value: config.authConfig.apiKeyValue ?? '',
+      enabled: true,
     });
-
-    // Add API key query param if configured
-    if (
-      config.authType === 'API Key' &&
-      config.authConfig.apiKeyIn === 'query' &&
-      config.authConfig.apiKeyName
-    ) {
-      urlObj.searchParams.append(config.authConfig.apiKeyName, config.authConfig.apiKeyValue || '');
-    }
-
-    return urlObj.toString();
-  } catch {
-    return config.url;
   }
+
+  return joinUrl(config.url, params);
+}
+
+function base64(input: string): string {
+  if (typeof btoa === 'function') {
+    // btoa is latin1-only, so encode to bytes first; otherwise a non-ASCII
+    // credential throws InvalidCharacterError.
+    return btoa(String.fromCharCode(...new TextEncoder().encode(input)));
+  }
+  return Buffer.from(input, 'utf8').toString('base64');
 }
 
 export function buildHeadersRecord(config: RequestConfig): Record<string, string> {
   const headers: Record<string, string> = {};
 
-  config.headers.forEach((h) => {
-    if (h.enabled && h.key) {
-      headers[h.key] = h.value;
-    }
-  });
+  for (const h of config.headers) {
+    if (h.enabled && h.key.trim()) headers[h.key] = h.value;
+  }
+
+  const hasHeader = (name: string) =>
+    Object.keys(headers).some((k) => k.toLowerCase() === name.toLowerCase());
 
   if (config.authType === 'Bearer Token' && config.authConfig.bearerToken) {
-    headers['Authorization'] = `Bearer ${config.authConfig.bearerToken}`;
+    headers.Authorization = `Bearer ${config.authConfig.bearerToken}`;
   } else if (
     config.authType === 'API Key' &&
     config.authConfig.apiKeyIn === 'header' &&
     config.authConfig.apiKeyName
   ) {
-    headers[config.authConfig.apiKeyName] = config.authConfig.apiKeyValue || '';
+    headers[config.authConfig.apiKeyName] = config.authConfig.apiKeyValue ?? '';
   } else if (config.authType === 'Basic Auth' && config.authConfig.basicUsername) {
-    const credentials = `${config.authConfig.basicUsername}:${config.authConfig.basicPassword || ''}`;
-    const encoded =
-      typeof btoa !== 'undefined'
-        ? btoa(credentials)
-        : typeof Buffer !== 'undefined'
-          ? Buffer.from(credentials).toString('base64')
-          : '';
-    headers['Authorization'] = `Basic ${encoded}`;
+    const credentials = `${config.authConfig.basicUsername}:${config.authConfig.basicPassword ?? ''}`;
+    headers.Authorization = `Basic ${base64(credentials)}`;
   }
 
-  if (
-    config.bodyType === 'json' &&
-    config.body &&
-    !headers['Content-Type'] &&
-    !headers['content-type']
-  ) {
+  if (config.bodyType === 'json' && config.body && !hasHeader('content-type')) {
     headers['Content-Type'] = 'application/json';
   }
 
   return headers;
 }
 
+/** Whether this request actually carries a body. */
+export function hasRequestBody(config: RequestConfig): boolean {
+  return (
+    ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method) &&
+    config.bodyType !== 'none' &&
+    Boolean(config.body.trim())
+  );
+}
+
+/**
+ * Single-quote a string for POSIX shells.
+ *
+ * The previous generator escaped only double quotes and wrapped the body in
+ * double quotes, so a body containing `$`, a backtick or a backslash produced a
+ * command the shell would mangle — or execute.
+ */
+export function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/** Quote for a single-quoted PHP string literal. */
+function phpQuote(value: string): string {
+  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+/** Quote for a Go interpreted string literal. */
+function goQuote(value: string): string {
+  return JSON.stringify(value);
+}
+
+/** Choose a Rust raw-string hash count that cannot collide with the payload. */
+function rustRawString(value: string): string {
+  let hashes = '';
+  while (value.includes(`"${hashes}`)) hashes += '#';
+  return `r${hashes}"${value}"${hashes}`;
+}
+
 export function generateCodeSnippet(config: RequestConfig, language: CodeLanguage): string {
   const fullUrl = buildFullUrl(config);
   const headers = buildHeadersRecord(config);
-  const hasBody =
-    ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method) && Boolean(config.body);
+  const withBody = hasRequestBody(config);
+  const body = config.body.trim();
+  const headerEntries = Object.entries(headers);
 
   switch (language) {
     case 'fetch': {
-      const options: Record<string, any> = { method: config.method };
-      if (Object.keys(headers).length > 0) options.headers = headers;
-      if (hasBody) {
-        try {
-          options.body = JSON.parse(config.body);
-        } catch {
-          options.body = config.body;
-        }
+      const parts = [`  method: '${config.method}',`];
+      if (headerEntries.length) parts.push(`  headers: ${JSON.stringify(headers, null, 4)},`);
+      if (withBody) {
+        parts.push(
+          config.bodyType === 'json'
+            ? `  body: JSON.stringify(${body}),`
+            : `  body: ${JSON.stringify(body)},`,
+        );
       }
+      return `// JavaScript — fetch
+const response = await fetch(${JSON.stringify(fullUrl)}, {
+${parts.join('\n')}
+});
 
-      return `// JavaScript Fetch (Async/Await)
-async function sendRequest() {
-  const response = await fetch('${fullUrl}', {
-    method: '${config.method}',
-${Object.keys(headers).length > 0 ? `    headers: ${JSON.stringify(headers, null, 6)},\n` : ''}${hasBody ? `    body: JSON.stringify(${config.body.trim()}),\n` : ''}  });
-
-  const data = await response.json();
-  console.log('Status:', response.status);
-  console.log('Data:', data);
+if (!response.ok) {
+  throw new Error(\`HTTP \${response.status} \${response.statusText}\`);
 }
 
-sendRequest();`;
+const data = await response.json();
+console.log(data);`;
     }
 
     case 'axios': {
-      return `// JavaScript Axios
+      const parts = [
+        `  method: '${config.method.toLowerCase()}',`,
+        `  url: ${JSON.stringify(fullUrl)},`,
+      ];
+      if (headerEntries.length) parts.push(`  headers: ${JSON.stringify(headers, null, 4)},`);
+      if (withBody) {
+        parts.push(
+          config.bodyType === 'json' ? `  data: ${body},` : `  data: ${JSON.stringify(body)},`,
+        );
+      }
+      return `// JavaScript — axios
 import axios from 'axios';
 
-async function sendRequest() {
-  try {
-    const response = await axios({
-      method: '${config.method.toLowerCase()}',
-      url: '${fullUrl}',
-${Object.keys(headers).length > 0 ? `      headers: ${JSON.stringify(headers, null, 8)},\n` : ''}${hasBody ? `      data: ${config.body.trim()},\n` : ''}    });
-
-    console.log('Status:', response.status);
-    console.log('Data:', response.data);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-sendRequest();`;
+try {
+  const { status, data } = await axios({
+${parts.join('\n')}
+  });
+  console.log(status, data);
+} catch (error) {
+  console.error(error.response?.status, error.response?.data ?? error.message);
+}`;
     }
 
     case 'curl': {
-      let cmd = `curl -X ${config.method} "${fullUrl}"`;
-
-      Object.entries(headers).forEach(([key, value]) => {
-        cmd += ` \\\n  -H "${key}: ${value}"`;
-      });
-
-      if (hasBody) {
-        // Escaping body for bash
-        const safeBody = config.body.replace(/"/g, '\\"');
-        cmd += ` \\\n  -d "${safeBody}"`;
+      let cmd = `curl -sS -X ${config.method} ${shellQuote(fullUrl)}`;
+      for (const [key, value] of headerEntries) {
+        cmd += ` \\\n  -H ${shellQuote(`${key}: ${value}`)}`;
       }
-
-      return `# cURL Terminal Command
-${cmd}`;
+      if (withBody) cmd += ` \\\n  -d ${shellQuote(body)}`;
+      return `# cURL\n${cmd}`;
     }
 
     case 'python': {
-      let pyHeaders = '';
-      if (Object.keys(headers).length > 0) {
-        pyHeaders = `headers = ${JSON.stringify(headers, null, 4)}\n`;
+      const lines = ['import requests', '', `url = ${JSON.stringify(fullUrl)}`];
+      if (headerEntries.length) lines.push(`headers = ${JSON.stringify(headers, null, 4)}`);
+      if (withBody) {
+        lines.push(
+          config.bodyType === 'json' ? `payload = ${body}` : `payload = ${JSON.stringify(body)}`,
+        );
       }
 
-      let pyBody = '';
-      if (hasBody) {
-        if (config.bodyType === 'json') {
-          pyBody = `payload = ${config.body.trim()}\n`;
-        } else {
-          pyBody = `payload = "${config.body.replace(/"/g, '\\"')}"\n`;
-        }
-      }
+      const args = ['url'];
+      if (headerEntries.length) args.push('headers=headers');
+      if (withBody) args.push(config.bodyType === 'json' ? 'json=payload' : 'data=payload');
+      args.push('timeout=30');
 
-      return `# Python requests library
-import requests
-
-url = "${fullUrl}"
-${pyHeaders}${pyBody}
-response = requests.${config.method.toLowerCase()}(
-    url,
-${pyHeaders ? '    headers=headers,\n' : ''}${hasBody ? (config.bodyType === 'json' ? '    json=payload,\n' : '    data=payload,\n') : ''})
-
-print("Status Code:", response.status_code)
-print("Response JSON:", response.json())`;
+      lines.push(
+        '',
+        `response = requests.${config.method.toLowerCase()}(${args.join(', ')})`,
+        'response.raise_for_status()',
+        '',
+        'print(response.status_code)',
+        'print(response.json())',
+      );
+      return `# Python — requests\n${lines.join('\n')}`;
     }
 
     case 'node': {
-      return `// Node.js (v18+ Native Fetch)
-const options = {
-  method: '${config.method}',
-  headers: ${JSON.stringify(headers, null, 4)},
-${hasBody ? `  body: JSON.stringify(${config.body.trim()}),\n` : ''}};
+      const parts = [`  method: '${config.method}',`];
+      if (headerEntries.length) parts.push(`  headers: ${JSON.stringify(headers, null, 4)},`);
+      if (withBody) {
+        parts.push(
+          config.bodyType === 'json'
+            ? `  body: JSON.stringify(${body}),`
+            : `  body: ${JSON.stringify(body)},`,
+        );
+      }
+      return `// Node.js 20+ — native fetch
+const response = await fetch(${JSON.stringify(fullUrl)}, {
+${parts.join('\n')}
+});
 
-fetch('${fullUrl}', options)
-  .then(res => res.json())
-  .then(json => console.log(json))
-  .catch(err => console.error('error:' + err));`;
+console.log(response.status, await response.json());`;
     }
 
     case 'go': {
-      return `// Go net/http
+      const headerLines = headerEntries
+        .map(([k, v]) => `\treq.Header.Set(${goQuote(k)}, ${goQuote(v)})`)
+        .join('\n');
+      return `// Go — net/http
 package main
 
 import (
-	"fmt"
-	"io"
-	"net/http"
-${hasBody ? '\t"strings"\n' : ''})
+\t"fmt"
+\t"io"
+\t"net/http"${withBody ? '\n\t"strings"' : ''}
+\t"time"
+)
 
 func main() {
-	url := "${fullUrl}"
-${hasBody ? `	payload := strings.NewReader(\`${config.body.trim()}\`)\n\treq, _ := http.NewRequest("${config.method}", url, payload)\n` : `	req, _ := http.NewRequest("${config.method}", url, nil)\n`}
-${Object.entries(headers)
-  .map(([k, v]) => `	req.Header.Add("${k}", "${v}")`)
-  .join('\n')}
+\turl := ${goQuote(fullUrl)}
+${
+  withBody
+    ? `\tpayload := strings.NewReader(${goQuote(body)})\n\treq, err := http.NewRequest(${goQuote(config.method)}, url, payload)`
+    : `\treq, err := http.NewRequest(${goQuote(config.method)}, url, nil)`
+}
+\tif err != nil {
+\t\tpanic(err)
+\t}
+${headerLines}
 
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	defer res.Body.Close()
+\tclient := &http.Client{Timeout: 30 * time.Second}
+\tres, err := client.Do(req)
+\tif err != nil {
+\t\tpanic(err)
+\t}
+\tdefer res.Body.Close()
 
-	body, _ := io.ReadAll(res.Body)
-	fmt.Println("Status:", res.Status)
-	fmt.Println(string(body))
+\tbody, _ := io.ReadAll(res.Body)
+\tfmt.Println(res.Status)
+\tfmt.Println(string(body))
 }`;
     }
 
     case 'rust': {
-      return `// Rust reqwest
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+      // The previous version used HeaderValue::from_static, which requires a
+      // &'static str and does not compile for a runtime value.
+      const headerLines = headerEntries
+        .map(([k, v]) => `        .header(${JSON.stringify(k)}, ${JSON.stringify(v)})`)
+        .join('\n');
+      return `// Rust — reqwest
+// Cargo.toml: reqwest = { version = "0.12", features = ["json"] }
+//             tokio   = { version = "1", features = ["full"] }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-    let mut headers = HeaderMap::new();
 
-${Object.entries(headers)
-  .map(([k, v]) => `    headers.insert("${k.toLowerCase()}", HeaderValue::from_static("${v}"));`)
-  .join('\n')}
-
-    let res = client
-        .${config.method.toLowerCase()}("${fullUrl}")
-        .headers(headers)
-${hasBody ? `        .body(r#"${config.body.trim()}"#)\n` : ''}        .send()
+    let response = client
+        .request(reqwest::Method::${config.method}, ${JSON.stringify(fullUrl)})
+${headerLines}${withBody ? `\n        .body(${rustRawString(body)})` : ''}
+        .send()
         .await?;
 
-    println!("Status: {}", res.status());
-    let body = res.text().await?;
-    println!("Body: {}", body);
+    println!("{}", response.status());
+    println!("{}", response.text().await?);
 
     Ok(())
 }`;
     }
 
     case 'php': {
+      const headerArray = headerEntries
+        .map(([k, v]) => `    ${phpQuote(`${k}: ${v}`)}`)
+        .join(',\n');
       return `<?php
-// PHP cURL
+// PHP — cURL
 $curl = curl_init();
 
-curl_setopt_array($curl, array(
-  CURLOPT_URL => '${fullUrl}',
+curl_setopt_array($curl, [
+  CURLOPT_URL => ${phpQuote(fullUrl)},
   CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_CUSTOMREQUEST => '${config.method}',
-${hasBody ? `  CURLOPT_POSTFIELDS => '${config.body.replace(/'/g, "\\'")}',\n` : ''}  CURLOPT_HTTPHEADER => array(
-${Object.entries(headers)
-  .map(([k, v]) => `    '${k}: ${v}'`)
-  .join(',\n')}
-  ),
-));
+  CURLOPT_CUSTOMREQUEST => ${phpQuote(config.method)},
+  CURLOPT_TIMEOUT => 30,${withBody ? `\n  CURLOPT_POSTFIELDS => ${phpQuote(body)},` : ''}
+  CURLOPT_HTTPHEADER => [
+${headerArray}
+  ],
+]);
 
 $response = curl_exec($curl);
-$err = curl_error($curl);
+$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+$error = curl_error($curl);
 curl_close($curl);
 
-if ($err) {
-  echo "cURL Error #:" . $err;
+if ($error) {
+  echo "cURL error: " . $error;
 } else {
-  echo $response;
-}
-?>`;
+  echo $status . PHP_EOL . $response;
+}`;
     }
 
     default:
-      return `// Select a language`;
+      return '// Select a language';
   }
 }

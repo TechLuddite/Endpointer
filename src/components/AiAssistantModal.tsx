@@ -1,219 +1,283 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, X, Copy, Check, RefreshCw } from 'lucide-react';
+/**
+ * Payload analysis dialog.
+ *
+ * The old version reported "Analyzing with Gemini AI…" and "Powered by Gemini
+ * AI Engine" regardless of whether any backend existed, and silently swapped in
+ * a local function when the request failed. Here the local path is the labelled
+ * default when AI is unavailable, and it does something the model cannot do
+ * better anyway: derive types structurally from the actual payload.
+ */
+
+import { useEffect, useState } from 'react';
+import { Check, Copy, RefreshCw, Sparkles, WifiOff } from 'lucide-react';
+import type { Capabilities } from '../types';
+import { Modal } from './Modal';
+import { inferPython, inferTypeScript, inferZod } from '../utils/typeInference';
 
 interface AiAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
+  capabilities: Capabilities;
   initialPrompt?: string;
-  initialContext?: any;
+  context: unknown;
 }
 
-function generateClientSideAnalysis(prompt: string, context: any): string {
-  const json = typeof context === 'object' ? context : { data: context };
+type LocalTool = 'typescript' | 'zod' | 'python' | 'shape';
 
-  if (
-    prompt.toLowerCase().includes('interface') ||
-    prompt.toLowerCase().includes('typescript') ||
-    prompt.toLowerCase().includes('type')
-  ) {
-    const generateTsType = (obj: any, name = 'ApiResponse'): string => {
-      if (obj === null) return 'null';
-      if (Array.isArray(obj)) {
-        if (obj.length === 0) return 'any[]';
-        return `${generateTsType(obj[0], 'Item')}[]`;
-      }
-      if (typeof obj === 'object') {
-        const lines = Object.entries(obj).map(([k, v]) => {
-          const typeStr = generateTsType(v, k);
-          return `  ${k}: ${typeStr};`;
-        });
-        return `export interface ${name} {\n${lines.join('\n')}\n}`;
-      }
-      return typeof obj;
-    };
+const LOCAL_TOOLS: Array<{ id: LocalTool; label: string; description: string }> = [
+  { id: 'typescript', label: 'TypeScript', description: 'Interfaces derived from the payload' },
+  { id: 'zod', label: 'Zod', description: 'A runtime validation schema' },
+  { id: 'python', label: 'Python', description: 'Dataclasses' },
+  { id: 'shape', label: 'Field summary', description: 'Top-level keys and their types' },
+];
 
-    return `// Generated TypeScript Interface (Client-Side Mode)\n\n${generateTsType(json, 'ApiResponse')}`;
+function describeShape(context: unknown): string {
+  if (Array.isArray(context)) {
+    return `Array of ${context.length} item${context.length === 1 ? '' : 's'}.\n\nFirst element:\n${JSON.stringify(context[0], null, 2).slice(0, 2000)}`;
   }
-
-  if (prompt.toLowerCase().includes('explain') || prompt.toLowerCase().includes('field')) {
-    const fields = Object.keys(json || {});
-    const explanations = fields.map(
-      (f) =>
-        `- ${f}: (${typeof json[f]}) field representing ${f.replace(/([A-Z])/g, ' $1').toLowerCase()}`,
-    );
-    return `// JSON Payload Field Analysis (Client-Side Mode)\n\nDetected ${fields.length} top-level fields:\n\n${explanations.join('\n')}`;
+  if (!context || typeof context !== 'object') {
+    return `Payload is a ${context === null ? 'null' : typeof context} value: ${JSON.stringify(context)}`;
   }
-
-  return `// Payload Analysis (Client-Side Mode)\n\nData Type: ${Array.isArray(json) ? 'Array' : typeof json}\nKeys: ${Object.keys(json || {}).join(', ') || 'N/A'}\n\nSample Object:\n${JSON.stringify(json, null, 2)}`;
+  const entries = Object.entries(context as Record<string, unknown>);
+  const lines = entries.map(([key, value]) => {
+    const type = Array.isArray(value)
+      ? `array(${value.length})`
+      : value === null
+        ? 'null'
+        : typeof value;
+    return `  ${key}: ${type}`;
+  });
+  return `${entries.length} top-level field${entries.length === 1 ? '' : 's'}:\n\n${lines.join('\n')}`;
 }
 
-export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
+export function AiAssistantModal({
   isOpen,
   onClose,
+  capabilities,
   initialPrompt,
-  initialContext,
-}) => {
-  const [prompt, setPrompt] = useState(
-    initialPrompt ||
-      'Analyze this payload, list key data fields, and generate a TypeScript interface for it.',
-  );
-  const [context, setContext] = useState<any>(
-    initialContext || { sample: 'Select an API response in Playground to analyze' },
-  );
+  context,
+}: AiAssistantModalProps) {
+  const aiAvailable = capabilities.ai.available;
+  const [prompt, setPrompt] = useState(initialPrompt ?? '');
+  const [result, setResult] = useState('');
+  const [resultSource, setResultSource] = useState<'ai' | 'local' | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string>('');
+  const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (initialPrompt) setPrompt(initialPrompt);
-    if (initialContext) setContext(initialContext);
-  }, [initialPrompt, initialContext]);
+  }, [initialPrompt]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setResult('');
+      setResultSource(null);
+      setError('');
+    }
+  }, [isOpen, context]);
 
-  const handleRunAi = async () => {
-    setLoading(true);
-    setResult('');
+  const hasContext = context !== null && context !== undefined;
+
+  const runLocal = (tool: LocalTool) => {
+    if (!hasContext) {
+      setError('Send a request first — these are derived from a real response payload.');
+      return;
+    }
     setError('');
+    setResultSource('local');
+    setResult(
+      tool === 'typescript'
+        ? inferTypeScript(context)
+        : tool === 'zod'
+          ? inferZod(context)
+          : tool === 'python'
+            ? inferPython(context)
+            : describeShape(context),
+    );
+  };
 
+  const runAi = async () => {
+    if (!prompt.trim()) {
+      setError('Enter a question first.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setResult('');
     try {
-      const resp = await fetch('/api/ai-analyze', {
+      const res = await fetch('/api/ai-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, context }),
       });
-
-      if (!resp.ok || resp.headers.get('content-type')?.includes('text/html')) {
-        setResult(generateClientSideAnalysis(prompt, context));
+      const data = (await res.json()) as { result?: string; error?: string };
+      if (!res.ok) {
+        setError(data.error ?? `The AI request failed with HTTP ${res.status}.`);
         return;
       }
-
-      const data = await resp.json();
-      setResult(data.result || generateClientSideAnalysis(prompt, context));
-    } catch {
-      setResult(generateClientSideAnalysis(prompt, context));
+      setResultSource('ai');
+      setResult(data.result ?? 'The model returned an empty response.');
+    } catch (err) {
+      setError(`Could not reach the AI endpoint: ${(err as Error).message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(result);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(result);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError('Could not access the clipboard.');
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-slate-100">AI Schema & Payload Assistant</h3>
-              <p className="text-xs text-slate-400">Powered by Gemini AI Engine</p>
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg bg-slate-950"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Quick Prompt Presets */}
-        <div className="space-y-2">
-          <label className="text-xs font-mono text-slate-400">Analysis Prompt:</label>
-          <div className="flex flex-wrap gap-1.5 text-xs">
-            <button
-              onClick={() =>
-                setPrompt('Generate a clean TypeScript type interface for this payload.')
-              }
-              className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-            >
-              TypeScript Interfaces
-            </button>
-            <button
-              onClick={() =>
-                setPrompt('Explain what each key field in this JSON response represents.')
-              }
-              className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-            >
-              Field Explanations
-            </button>
-            <button
-              onClick={() =>
-                setPrompt('Suggest 5 test cases and edge conditions for testing this API endpoint.')
-              }
-              className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 font-mono border border-slate-800 text-[11px]"
-            >
-              Test Case Ideas
-            </button>
-          </div>
-
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={2}
-            className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
-          />
-        </div>
-
-        {/* Execute Button */}
-        <button
-          onClick={handleRunAi}
-          disabled={loading || !prompt}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50"
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Analyse response"
+      subtitle={
+        aiAvailable
+          ? `Local generators plus ${capabilities.ai.model}`
+          : 'Local generators — no AI backend configured'
+      }
+      icon={
+        <div
+          className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+            aiAvailable ? 'bg-gradient-to-tr from-indigo-500 to-purple-600' : 'bg-slate-700'
+          }`}
         >
-          {loading ? (
+          {aiAvailable ? (
+            <Sparkles className="h-4 w-4 text-white" aria-hidden="true" />
+          ) : (
+            <WifiOff className="h-4 w-4 text-slate-300" aria-hidden="true" />
+          )}
+        </div>
+      }
+    >
+      <div className="space-y-5">
+        <section className="space-y-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Derived from the payload
+          </h3>
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            These read the actual response structure, so they are correct for this sample by
+            construction. No model involved, and they work offline.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {LOCAL_TOOLS.map((tool) => (
+              <button
+                key={tool.id}
+                type="button"
+                onClick={() => runLocal(tool.id)}
+                disabled={!hasContext}
+                title={tool.description}
+                className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 font-mono text-[11px] text-slate-300 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {tool.label}
+              </button>
+            ))}
+          </div>
+          {!hasContext && (
+            <p className="text-[11px] text-amber-400">
+              No response captured yet. Send a request in the playground first.
+            </p>
+          )}
+        </section>
+
+        <section className="space-y-2 border-t border-slate-800 pt-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Ask the model
+          </h3>
+          {aiAvailable ? (
             <>
-              <RefreshCw className="w-4 h-4 animate-spin text-white" />
-              <span>Analyzing with Gemini AI...</span>
+              <label className="sr-only" htmlFor="ai-prompt">
+                Question for the model
+              </label>
+              <textarea
+                id="ai-prompt"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={3}
+                placeholder="e.g. Which of these fields are stable enough to key on, and what should I assert?"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void runAi()}
+                disabled={loading || !prompt.trim()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-2.5 text-xs font-bold text-white transition-all hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Asking {capabilities.ai.model}…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    Ask {capabilities.ai.model}
+                  </>
+                )}
+              </button>
+              <p className="text-[11px] text-slate-500">
+                Credentials in the payload are redacted before it is sent.
+              </p>
             </>
           ) : (
-            <>
-              <Sparkles className="w-4 h-4 text-white" />
-              <span>Generate AI Analysis</span>
-            </>
+            <p className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs leading-relaxed text-slate-400">
+              No AI backend is configured on this deployment. Set <code>GEMINI_API_KEY</code> and
+              run the server (<code>npm run dev</code>) to enable open-ended analysis. The
+              generators above work without it.
+            </p>
           )}
-        </button>
+        </section>
 
-        {/* Error message */}
         {error && (
-          <div className="p-3 bg-rose-950/80 border border-rose-800 rounded-xl text-rose-300 text-xs font-mono">
+          <p className="rounded-xl border border-rose-800 bg-rose-950/80 p-3 font-mono text-xs text-rose-300">
             {error}
-          </div>
+          </p>
         )}
 
-        {/* AI Result Output */}
         {result && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-              <span>AI Insight Output:</span>
+          <section className="space-y-2 border-t border-slate-800 pt-4">
+            <div className="flex items-center justify-between font-mono text-xs text-slate-400">
+              <span>
+                Output
+                {resultSource === 'local' && (
+                  <span className="ml-2 rounded border border-slate-700 px-1.5 py-0.5 text-[10px] uppercase text-slate-400">
+                    generated locally
+                  </span>
+                )}
+                {resultSource === 'ai' && (
+                  <span className="ml-2 rounded border border-indigo-700 px-1.5 py-0.5 text-[10px] uppercase text-indigo-300">
+                    {capabilities.ai.model}
+                  </span>
+                )}
+              </span>
               <button
-                onClick={handleCopy}
-                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-semibold"
+                type="button"
+                onClick={() => void copy()}
+                className="flex items-center gap-1 font-semibold text-cyan-400 hover:text-cyan-300"
               >
                 {copied ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
-                <span>{copied ? 'Copied' : 'Copy'}</span>
+                {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-indigo-300 overflow-x-auto max-h-64 whitespace-pre-wrap leading-relaxed select-text">
+            <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-xs leading-relaxed text-indigo-300">
               {result}
             </pre>
-          </div>
+          </section>
         )}
       </div>
-    </div>
+    </Modal>
   );
-};
+}

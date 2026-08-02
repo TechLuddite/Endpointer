@@ -1,573 +1,553 @@
-import React, { useState, useRef, useEffect } from 'react';
+/**
+ * The copilot panel.
+ *
+ * The honesty rules live here, not just in the helper it calls:
+ *
+ *  - The header states plainly whether a real model is connected or the offline
+ *    matcher is in use. The old panel said "AI Playground Assistant · Powered by
+ *    Gemini" unconditionally, including on the static deployment where no
+ *    backend existed at all.
+ *  - Offline replies are visually distinct and labelled. They are not styled to
+ *    look like model output.
+ *  - The progress line says what is actually happening. It used to say "AI
+ *    Assistant is analyzing query context and generating REST Playground
+ *    configuration…" while running a chain of `String.includes` checks.
+ */
+
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Sparkles,
-  Send,
-  RefreshCw,
-  Zap,
-  CheckCircle2,
-  CornerDownLeft,
   Bot,
-  User,
+  Check,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Trash2,
   Copy,
-  Check,
+  CornerDownLeft,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Trash2,
+  User,
+  WifiOff,
+  Zap,
 } from 'lucide-react';
-import { RequestConfig, ApiResponseData, AiChatMessage } from '../types';
+import type { AiChatMessage, ApiResponseData, Capabilities, RequestConfig } from '../types';
+import { generateOfflineReply } from '../utils/offlineAssistant';
 
 interface PlaygroundAiChatProps {
-  currentConfig: RequestConfig;
+  config: RequestConfig;
   response: ApiResponseData | null;
-  onApplyConfig: (configUpdate: Partial<RequestConfig>, summary?: string) => void;
-  onExecuteRequest: () => void;
+  capabilities: Capabilities;
+  /** Applies the update and returns the resulting config, so the caller can
+   *  send exactly what was applied rather than racing a re-render. */
+  onApplyConfig: (update: Partial<RequestConfig>) => RequestConfig;
+  onExecute: (config?: RequestConfig) => Promise<void>;
+  onNotify: (message: string, tone?: 'info' | 'error') => void;
 }
 
-export const PlaygroundAiChat: React.FC<PlaygroundAiChatProps> = ({
-  currentConfig,
+const PROMPT_CHIPS = [
+  { label: '🎲 Random Pokémon', prompt: 'Build a request for a random Pokémon' },
+  { label: '🌤 Weather in Tokyo', prompt: 'Build a weather request for Tokyo' },
+  { label: '📝 Sample POST', prompt: 'Configure a POST request with a sample JSON payload' },
+  { label: '🔐 Bearer auth', prompt: 'Set up bearer token auth' },
+];
+
+export function PlaygroundAiChat({
+  config,
   response,
+  capabilities,
   onApplyConfig,
-  onExecuteRequest,
-}) => {
-  const [messages, setMessages] = useState<AiChatMessage[]>([
-    {
-      id: 'init-1',
-      sender: 'assistant',
-      text: "👋 **Welcome to AI API Copilot!**\n\nI can build queries, adjust headers/auth, parse payloads, or auto-configure the REST Playground for you. Try asking:\n- *'Build a query for getting a random pokemon'*\n- *'Search weather for Tokyo'*\n- *'Configure a POST request with a sample JSON user object'*\n- *'Set up Bearer Token authorization'*",
-      timestamp: Date.now(),
-    },
-  ]);
+  onExecute,
+  onNotify,
+}: PlaygroundAiChatProps) {
+  const aiAvailable = capabilities.ai.available;
+
+  const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [autoExecute, setAutoExecute] = useState(true);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(true);
+  const [autoSend, setAutoSend] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const greeting = useMemo<AiChatMessage>(
+    () => ({
+      id: 'greeting',
+      sender: 'assistant',
+      source: 'system',
+      timestamp: 0,
+      text: aiAvailable
+        ? `Connected to **${capabilities.ai.model}**. I can build requests, generate types from a real response, draft assertions, and explain errors.\n\nCredentials in your request are redacted before anything is sent.`
+        : 'No AI backend is configured on this deployment, so I am running the **offline helper** — deterministic pattern matching in your browser, not a language model. It recognises a handful of specific requests.\n\nTo enable real AI, run Endpointer with a `GEMINI_API_KEY` set.',
+    }),
+    [aiAvailable, capabilities.ai.model],
+  );
 
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedCodeId(id);
-    setTimeout(() => setCopiedCodeId(null), 2000);
+  const copy = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      onNotify('Could not access the clipboard.', 'error');
+    }
   };
 
-  // Intelligent client-side fallback if server endpoint is offline or rate limited
-  const generateClientFallback = (
-    prompt: string,
-  ): { message: string; actionSummary?: string; configUpdate?: Partial<RequestConfig> } => {
-    const lower = prompt.toLowerCase();
-
-    if (lower.includes('pokemon') || lower.includes('pokémon')) {
-      let pokemonTarget = 'pikachu';
-      let summary = 'Set URL to Pokémon API';
-      if (lower.includes('random')) {
-        const randomId = Math.floor(Math.random() * 151) + 1;
-        pokemonTarget = String(randomId);
-        summary = `Built query for Random Pokémon (#${randomId})`;
-      } else {
-        const matches = lower.match(/pokemon\s+([a-z0-9]+)/i) || lower.match(/for\s+([a-z0-9]+)/i);
-        if (matches && matches[1] && matches[1] !== 'a' && matches[1] !== 'getting') {
-          pokemonTarget = matches[1].toLowerCase();
-          summary = `Built query for Pokémon '${pokemonTarget}'`;
-        }
-      }
-
-      const targetUrl = `https://pokeapi.co/api/v2/pokemon/${pokemonTarget}`;
-      return {
-        message: `I've configured the REST Playground endpoint for Pokédex entry **${pokemonTarget}**. The URL, proxy settings, and GET method are updated below!`,
-        actionSummary: summary,
-        configUpdate: {
-          method: 'GET',
-          url: targetUrl,
-          useProxy: true,
-        },
-      };
-    }
-
-    if (lower.includes('weather') || lower.includes('forecast')) {
-      return {
-        message:
-          "I've configured the REST Playground to fetch real-time weather metrics from Open-Meteo for Tokyo.",
-        actionSummary: 'Set endpoint URL to Tokyo Weather API',
-        configUpdate: {
-          method: 'GET',
-          url: 'https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&current_weather=true',
-          useProxy: true,
-        },
-      };
-    }
-
-    if (lower.includes('post') || lower.includes('create') || lower.includes('payload')) {
-      return {
-        message:
-          "I've configured a POST request to JSONPlaceholder with a sample JSON payload body.",
-        actionSummary: 'Set method to POST & added sample JSON body',
-        configUpdate: {
-          method: 'POST',
-          url: 'https://jsonplaceholder.typicode.com/posts',
-          bodyType: 'json',
-          body: JSON.stringify(
-            { title: 'Endpointer Test', body: 'AI-generated test request payload', userId: 1 },
-            null,
-            2,
-          ),
-          useProxy: true,
-        },
-      };
-    }
-
-    if (lower.includes('bearer') || lower.includes('auth') || lower.includes('token')) {
-      return {
-        message: "I've enabled **Bearer Token** authentication mode with a test API key.",
-        actionSummary: 'Enabled Bearer Token authentication',
-        configUpdate: {
-          authType: 'Bearer Token',
-          authConfig: {
-            ...currentConfig.authConfig,
-            bearerToken: 'sk_test_endpointer_bearer_token_99812',
-          },
-        },
-      };
-    }
-
-    if (lower.includes('interface') || lower.includes('typescript') || lower.includes('ts')) {
-      let tsCode = 'export interface ApiResponse {\n  [key: string]: any;\n}';
-      if (response && response.data) {
-        const generateTsType = (obj: any, name = 'ApiResponse'): string => {
-          if (obj === null) return 'null';
-          if (Array.isArray(obj)) {
-            if (obj.length === 0) return 'any[]';
-            return `${generateTsType(obj[0], 'Item')}[]`;
-          }
-          if (typeof obj === 'object') {
-            const lines = Object.entries(obj)
-              .slice(0, 15)
-              .map(([k, v]) => `  ${k}: ${generateTsType(v, k)};`);
-            return `export interface ${name} {\n${lines.join('\n')}\n}`;
-          }
-          return typeof obj;
-        };
-        tsCode = generateTsType(response.data);
-      }
-
-      return {
-        message: `Generated TypeScript Interface for payload:\n\n\`\`\`typescript\n${tsCode}\n\`\`\``,
-        actionSummary: 'Generated TypeScript Interface',
-      };
-    }
-
-    return {
-      message: `Analyzed your request: "${prompt}". Applied recommended parameters to the configuration below.`,
-    };
-  };
-
-  const handleSendMessage = async (textToSend?: string) => {
-    const prompt = (textToSend || input).trim();
+  const send = async (text?: string) => {
+    const prompt = (text ?? input).trim();
     if (!prompt || loading) return;
 
-    const userMsg: AiChatMessage = {
+    const userMessage: AiChatMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
       text: prompt,
       timestamp: Date.now(),
     };
-
-    const updatedHistory = [...messages, userMsg];
-    setMessages(updatedHistory);
+    const history = [...messages, userMessage];
+    setMessages(history);
     setInput('');
     setLoading(true);
 
     try {
-      const resp = await fetch('/api/ai-chat-assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: updatedHistory,
-          currentConfig,
-          responseContext: response?.data || null,
-        }),
-      });
+      let reply: AiChatMessage;
 
-      let aiResult: any;
-      if (!resp.ok || resp.headers.get('content-type')?.includes('text/html')) {
-        aiResult = generateClientFallback(prompt);
+      if (aiAvailable) {
+        const res = await fetch('/api/ai-chat-assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: history,
+            currentConfig: config,
+            responseContext: response?.data ?? null,
+          }),
+        });
+
+        if (!res.ok) {
+          const detail = await res.json().catch(() => ({}) as { error?: string });
+          reply = {
+            id: `assistant-${Date.now()}`,
+            sender: 'assistant',
+            source: 'system',
+            timestamp: Date.now(),
+            text: `The AI request failed (HTTP ${res.status}). ${detail.error ?? ''}\n\nNothing in your request was changed.`,
+          };
+        } else {
+          const data = (await res.json()) as {
+            message?: string;
+            actionSummary?: string;
+            configUpdate?: Partial<RequestConfig>;
+          };
+          reply = {
+            id: `assistant-${Date.now()}`,
+            sender: 'assistant',
+            source: 'ai',
+            timestamp: Date.now(),
+            text: data.message ?? 'The model returned an empty response.',
+            configUpdateSummary: data.actionSummary || undefined,
+            appliedConfig: data.configUpdate,
+          };
+        }
       } else {
-        aiResult = await resp.json();
+        const offline = generateOfflineReply(prompt, { config, response });
+        reply = {
+          id: `assistant-${Date.now()}`,
+          sender: 'assistant',
+          source: 'offline',
+          timestamp: Date.now(),
+          text: offline.message,
+          configUpdateSummary: offline.actionSummary,
+          appliedConfig: offline.configUpdate,
+        };
       }
 
-      const botMsgText = aiResult.message || aiResult.result || "I've processed your request.";
-      const actionSummary = aiResult.actionSummary;
-      const configUpdate = aiResult.configUpdate;
+      setMessages((current) => [...current, reply]);
 
-      const assistantMsg: AiChatMessage = {
-        id: `assistant-${Date.now()}`,
-        sender: 'assistant',
-        text: botMsgText,
-        timestamp: Date.now(),
-        configUpdateSummary: actionSummary,
-        appliedConfig: configUpdate,
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      if (configUpdate && Object.keys(configUpdate).length > 0) {
-        onApplyConfig(configUpdate, actionSummary);
-        if (autoExecute) {
-          setTimeout(() => {
-            onExecuteRequest();
-          }, 300);
-        }
+      if (reply.appliedConfig && Object.keys(reply.appliedConfig).length > 0) {
+        // Apply, then send *the applied config* — no timer, no stale closure.
+        const applied = onApplyConfig(reply.appliedConfig);
+        if (autoSend) await onExecute(applied);
       }
-    } catch {
-      const fallback = generateClientFallback(prompt);
-      const assistantMsg: AiChatMessage = {
-        id: `assistant-${Date.now()}`,
-        sender: 'assistant',
-        text: fallback.message,
-        timestamp: Date.now(),
-        configUpdateSummary: fallback.actionSummary,
-        appliedConfig: fallback.configUpdate,
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      if (fallback.configUpdate) {
-        onApplyConfig(fallback.configUpdate, fallback.actionSummary);
-        if (autoExecute) {
-          setTimeout(() => {
-            onExecuteRequest();
-          }, 300);
-        }
-      }
+    } catch (err) {
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-${Date.now()}`,
+          sender: 'assistant',
+          source: 'system',
+          timestamp: Date.now(),
+          text: `Could not reach the AI endpoint: ${(err as Error).message}. Your request was not changed.`,
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper renderer to render code blocks and bold text cleanly
-  const renderFormattedText = (text: string, msgId: string) => {
-    const codeBlockRegex = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
-    type Part = { type: 'text'; content: string } | { type: 'code'; lang: string; code: string };
-    const parts: Part[] = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = codeBlockRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
-      }
-      parts.push({ type: 'code', lang: match[1] || 'text', code: match[2] ?? '' });
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push({ type: 'text', content: text.slice(lastIndex) });
-    }
-
-    return (
-      <div className="space-y-2">
-        {parts.map((p, idx) => {
-          if (p.type === 'code') {
-            const blockId = `${msgId}-code-${idx}`;
-            return (
-              <div
-                key={blockId}
-                className="my-2 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden font-mono text-[11px]"
-              >
-                <div className="px-3 py-1.5 bg-slate-800/60 border-b border-slate-700/60 flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] uppercase font-bold text-indigo-300">{p.lang}</span>
-                  <button
-                    onClick={() => copyToClipboard(p.code, blockId)}
-                    className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white transition-colors"
-                  >
-                    {copiedCodeId === blockId ? (
-                      <Check className="w-3 h-3 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                    <span>{copiedCodeId === blockId ? 'Copied' : 'Copy Code'}</span>
-                  </button>
-                </div>
-                <pre className="p-3 overflow-x-auto text-slate-200 leading-relaxed select-all">
-                  <code>{p.code}</code>
-                </pre>
-              </div>
-            );
-          }
-
-          // Format simple bold markdown **text**
-          const formattedText = p.content.split(/(\*\*.*?\*\*)/g).map((chunk, cIdx) => {
-            if (chunk.startsWith('**') && chunk.endsWith('**')) {
-              return (
-                <strong key={cIdx} className="text-cyan-300 font-semibold">
-                  {chunk.slice(2, -2)}
-                </strong>
-              );
-            }
-            return chunk;
-          });
-
-          return (
-            <p key={idx} className="whitespace-pre-wrap leading-relaxed select-text">
-              {formattedText}
-            </p>
-          );
-        })}
-      </div>
-    );
-  };
+  const allMessages = [greeting, ...messages];
 
   return (
-    <div className="bg-slate-900/90 border border-indigo-500/30 rounded-2xl overflow-hidden shadow-xl shadow-indigo-950/20 backdrop-blur-sm transition-all">
-      {/* Header Banner */}
-      <div className="px-4 py-3 bg-gradient-to-r from-indigo-950/90 via-slate-900 to-purple-950/90 border-b border-indigo-500/20 flex flex-wrap items-center justify-between gap-2">
+    <section className="overflow-hidden rounded-2xl border border-indigo-500/30 bg-slate-900/90 shadow-xl shadow-indigo-950/20">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-500/20 bg-gradient-to-r from-indigo-950/90 via-slate-900 to-purple-950/90 px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
-            <Sparkles className="w-4 h-4 text-white animate-pulse" />
+          <div
+            className={`flex h-7 w-7 items-center justify-center rounded-lg shadow-md ${
+              aiAvailable
+                ? 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-500 shadow-indigo-500/30'
+                : 'bg-slate-700'
+            }`}
+          >
+            {aiAvailable ? (
+              <Sparkles className="h-4 w-4 text-white" aria-hidden="true" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-slate-300" aria-hidden="true" />
+            )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-xs text-indigo-200 tracking-wide">
-                AI Playground Assistant
-              </span>
-              <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono">
-                Context-Aware Copilot
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xs font-bold tracking-wide text-indigo-200">Request copilot</h2>
+              {aiAvailable ? (
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-1.5 py-0.5 font-mono text-[10px] text-emerald-300">
+                  AI connected · {capabilities.ai.model}
+                </span>
+              ) : (
+                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-300">
+                  AI offline · pattern matching only
+                </span>
+              )}
             </div>
-            <p className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
-              <span>Target:</span>
-              <span className="text-cyan-300 font-bold">{currentConfig.method}</span>
-              <span className="text-slate-300 truncate max-w-[280px]">{currentConfig.url}</span>
+            <p className="font-mono text-[11px] text-slate-400">
+              <span className="font-bold text-cyan-300">{config.method}</span>{' '}
+              <span className="text-slate-300">{config.url || '—'}</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Auto-Execute Request Toggle */}
-          <label
-            className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-800/60 transition-colors"
-            title="Automatically send HTTP request when AI configures endpoint"
-          >
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-2.5 py-1 font-mono text-[11px] text-slate-300 hover:bg-slate-800/60">
             <input
               type="checkbox"
-              checked={autoExecute}
-              onChange={(e) => setAutoExecute(e.target.checked)}
-              className="rounded bg-slate-900 border-indigo-500/40 text-indigo-500 focus:ring-0 cursor-pointer"
+              checked={autoSend}
+              onChange={(e) => setAutoSend(e.target.checked)}
+              className="cursor-pointer rounded border-indigo-500/40 bg-slate-900 text-indigo-500"
             />
             <Zap
-              className={`w-3 h-3 ${autoExecute ? 'text-amber-400 fill-amber-400' : 'text-slate-500'}`}
+              className={`h-3 w-3 ${autoSend ? 'fill-amber-400 text-amber-400' : 'text-slate-500'}`}
+              aria-hidden="true"
             />
-            <span>Auto-Send</span>
+            <span>Auto-send</span>
           </label>
 
-          {messages.length > 1 && (
+          {messages.length > 0 && (
             <button
-              onClick={() => setMessages([messages[0]])}
-              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded-lg transition-colors text-xs flex items-center gap-1 font-mono"
-              title="Clear chat history"
+              type="button"
+              onClick={() => setMessages([])}
+              aria-label="Clear conversation"
+              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-slate-200"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           )}
-
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded-lg transition-colors"
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Collapse copilot' : 'Expand copilot'}
+            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-slate-200"
           >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {expanded ? (
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
 
-      {/* Main Chat Body */}
-      {isExpanded && (
-        <div className="p-4 space-y-3">
-          {/* Active Response Context Pill (If response is available) */}
+      {expanded && (
+        <div className="space-y-3 p-4">
           {response && (
-            <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-emerald-500/30 text-xs font-mono">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="text-emerald-300 font-semibold">
-                  Latest Response Context: {response.status} {response.statusText}
-                </span>
-                <span className="text-slate-400 text-[11px]">
-                  ({response.duration}ms • {(response.sizeBytes / 1024).toFixed(1)} KB)
-                </span>
-              </div>
+            <div
+              className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-slate-950 px-3 py-1.5 font-mono text-xs ${
+                response.ok ? 'border-emerald-500/30' : 'border-rose-500/30'
+              }`}
+            >
+              <span className={response.ok ? 'text-emerald-300' : 'text-rose-300'}>
+                Response in context: {response.status || '—'} {response.statusText} (
+                {response.duration}ms · {(response.sizeBytes / 1024).toFixed(1)} KB)
+              </span>
               <button
-                onClick={() =>
-                  handleSendMessage('Explain this API response payload and summarize key fields')
-                }
-                className="text-[11px] text-cyan-400 hover:text-cyan-200 underline font-semibold transition-colors"
+                type="button"
+                onClick={() => void send('Explain this response and summarise the key fields')}
+                className="text-[11px] font-semibold text-cyan-400 underline hover:text-cyan-200"
               >
-                Summarize Response →
+                Explain it →
               </button>
             </div>
           )}
 
-          {/* Conversation History Box */}
-          <div className="max-h-[220px] overflow-y-auto space-y-3 pr-1 font-mono text-xs scrollbar-thin scrollbar-thumb-slate-800">
-            {messages.map((msg) => (
+          <div
+            className="max-h-[240px] space-y-3 overflow-y-auto pr-1 font-mono text-xs"
+            aria-live="polite"
+          >
+            {allMessages.map((message) => (
               <div
-                key={msg.id}
-                className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                key={message.id}
+                className={`flex gap-2.5 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {msg.sender === 'assistant' && (
-                  <div className="w-6 h-6 rounded-md bg-indigo-950 border border-indigo-800 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-3.5 h-3.5" />
+                {message.sender === 'assistant' && (
+                  <div
+                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${
+                      message.source === 'ai'
+                        ? 'border-indigo-800 bg-indigo-950 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {message.source === 'ai' ? (
+                      <Bot className="h-3.5 w-3.5" aria-hidden="true" />
+                    ) : (
+                      <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[88%] rounded-xl p-3 space-y-2 ${
-                    msg.sender === 'user'
-                      ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md shadow-cyan-600/10'
-                      : 'bg-slate-950 border border-slate-800 text-slate-200'
+                  className={`max-w-[88%] space-y-2 rounded-xl p-3 ${
+                    message.sender === 'user'
+                      ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white'
+                      : message.source === 'ai'
+                        ? 'border border-indigo-900/60 bg-slate-950 text-slate-200'
+                        : 'border border-dashed border-slate-700 bg-slate-950/60 text-slate-300'
                   }`}
                 >
-                  {renderFormattedText(msg.text, msg.id)}
+                  {message.sender === 'assistant' && message.source !== 'ai' && (
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/80">
+                      {message.source === 'offline' ? 'Offline helper — not AI' : 'System'}
+                    </p>
+                  )}
 
-                  {/* Config Applied Diff & Driver Indicator */}
-                  {msg.configUpdateSummary && (
-                    <div className="mt-2 pt-2 border-t border-indigo-500/20 bg-indigo-950/40 p-2.5 rounded-lg text-[11px] text-indigo-300 space-y-2">
+                  <FormattedText
+                    text={message.text}
+                    messageId={message.id}
+                    onCopy={copy}
+                    copiedId={copiedId}
+                  />
+
+                  {message.configUpdateSummary && (
+                    <div className="mt-2 space-y-2 rounded-lg border-t border-indigo-500/20 bg-indigo-950/40 p-2.5 text-[11px] text-indigo-300">
                       <div className="flex items-center justify-between gap-2 font-semibold">
-                        <div className="flex items-center gap-1.5 text-emerald-400">
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          <span>Driven Playground Config: {msg.configUpdateSummary}</span>
-                        </div>
+                        <span className="flex items-center gap-1.5 text-emerald-400">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          Applied: {message.configUpdateSummary}
+                        </span>
                         <button
-                          onClick={onExecuteRequest}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-white text-[10px] font-bold shadow transition-all active:scale-95 shrink-0"
+                          type="button"
+                          onClick={() => void onExecute()}
+                          className="flex shrink-0 items-center gap-1 rounded-md bg-gradient-to-r from-cyan-500 to-indigo-500 px-2.5 py-1 text-[10px] font-bold text-white hover:from-cyan-400 hover:to-indigo-400"
                         >
-                          <Zap className="w-3 h-3 fill-current text-amber-300" />
-                          <span>Send Request Now</span>
+                          <Zap className="h-3 w-3 fill-current text-amber-300" aria-hidden="true" />
+                          Send now
                         </button>
                       </div>
-
-                      {/* Display applied parameters if available */}
-                      {msg.appliedConfig && (
-                        <div className="p-2 rounded bg-slate-900/90 border border-indigo-900/50 text-[10px] space-y-1 font-mono text-slate-300">
-                          {msg.appliedConfig.method && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-slate-500 uppercase font-bold">Method:</span>
-                              <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 font-bold">
-                                {msg.appliedConfig.method}
-                              </span>
-                            </div>
-                          )}
-                          {msg.appliedConfig.url && (
-                            <div className="flex items-start gap-2">
-                              <span className="text-slate-500 uppercase font-bold shrink-0">
-                                URL:
-                              </span>
-                              <span className="text-cyan-200 break-all">
-                                {msg.appliedConfig.url}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                      {message.appliedConfig?.url && (
+                        <p className="break-all text-[10px] text-cyan-200">
+                          {message.appliedConfig.method ?? config.method}{' '}
+                          {message.appliedConfig.url}
+                        </p>
                       )}
                     </div>
                   )}
                 </div>
 
-                {msg.sender === 'user' && (
-                  <div className="w-6 h-6 rounded-md bg-cyan-950 border border-cyan-800 text-cyan-400 flex items-center justify-center shrink-0 mt-0.5">
-                    <User className="w-3.5 h-3.5" />
+                {message.sender === 'user' && (
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-cyan-800 bg-cyan-950 text-cyan-400">
+                    <User className="h-3.5 w-3.5" aria-hidden="true" />
                   </div>
                 )}
               </div>
             ))}
 
             {loading && (
-              <div className="flex gap-2.5 items-center text-xs font-mono text-indigo-300 bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-800/40 animate-pulse">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                <span>
-                  AI Assistant is analyzing query context and generating REST Playground
-                  configuration...
-                </span>
-              </div>
+              <p className="flex animate-pulse items-center gap-2.5 rounded-xl border border-indigo-800/40 bg-indigo-950/40 p-2.5 text-xs text-indigo-300">
+                <RefreshCw
+                  className="h-3.5 w-3.5 animate-spin text-indigo-400"
+                  aria-hidden="true"
+                />
+                {aiAvailable
+                  ? `Asking ${capabilities.ai.model}…`
+                  : 'Matching against the offline patterns…'}
+              </p>
             )}
-            <div ref={chatBottomRef} />
+            <div ref={bottomRef} />
           </div>
 
-          {/* Contextual Action Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 text-[11px] scrollbar-none">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 shrink-0">
-              Prompts:
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 text-[11px]">
+            <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+              Try:
             </span>
-            <button
-              onClick={() => handleSendMessage('Build a query for getting a random pokemon')}
-              className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
-            >
-              🎲 Random Pokémon
-            </button>
-            <button
-              onClick={() => handleSendMessage('Build query for Pokémon Pikachu abilities')}
-              className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
-            >
-              ⚡ Pokémon Pikachu
-            </button>
-            <button
-              onClick={() => handleSendMessage('Configure POST request with sample JSON payload')}
-              className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
-            >
-              📝 Mock POST Body
-            </button>
-            <button
-              onClick={() => handleSendMessage('Set Auth to Bearer Token')}
-              className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-200 font-mono shrink-0 transition-all active:scale-95"
-            >
-              🔐 Bearer Token Auth
-            </button>
+            {PROMPT_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => void send(chip.prompt)}
+                className="shrink-0 rounded-lg border border-indigo-800/60 bg-indigo-950/70 px-2.5 py-1 font-mono text-indigo-200 transition-all hover:bg-indigo-900 active:scale-95"
+              >
+                {chip.label}
+              </button>
+            ))}
             {response && (
               <button
-                onClick={() =>
-                  handleSendMessage('Generate a TypeScript interface from the response payload')
-                }
-                className="px-2.5 py-1 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-800/60 text-purple-200 font-mono shrink-0 transition-all active:scale-95"
+                type="button"
+                onClick={() => void send('Generate a TypeScript interface from the response')}
+                className="shrink-0 rounded-lg border border-purple-800/60 bg-purple-950/80 px-2.5 py-1 font-mono text-purple-200 transition-all hover:bg-purple-900 active:scale-95"
               >
-                💻 Export TS Interface
+                💻 Types from response
               </button>
             )}
           </div>
 
-          {/* Prompt Input Box */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
+              <label className="sr-only" htmlFor="copilot-input">
+                Message the copilot
+              </label>
               <input
+                id="copilot-input"
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Ask AI to build a query, set up auth, or update config (e.g. 'Build a query for getting a random pokemon')..."
-                className="w-full pl-3.5 pr-10 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    void send();
+                  }
+                }}
+                placeholder={
+                  aiAvailable
+                    ? 'Ask for a request, types, assertions, or an explanation…'
+                    : 'Offline helper: try "random pokemon" or "weather in Tokyo"…'
+                }
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-3.5 pr-10 font-mono text-xs text-slate-200 placeholder-slate-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] font-mono flex items-center gap-0.5">
-                <CornerDownLeft className="w-3 h-3" />
-              </div>
+              <CornerDownLeft
+                className="absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-500"
+                aria-hidden="true"
+              />
             </div>
-
             <button
-              onClick={() => handleSendMessage()}
+              type="button"
+              onClick={() => void send()}
               disabled={loading || !input.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 disabled:opacity-50 transition-all active:scale-95 shrink-0"
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 px-4 py-2 text-xs font-bold text-white transition-all hover:from-indigo-500 hover:to-cyan-500 disabled:opacity-50 active:scale-95"
             >
               {loading ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               ) : (
                 <>
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Ask AI</span>
+                  <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Ask</span>
                 </>
               )}
             </button>
           </div>
         </div>
       )}
+    </section>
+  );
+}
+
+/** Minimal markdown: fenced code blocks, `inline code`, and **bold**. */
+function FormattedText({
+  text,
+  messageId,
+  onCopy,
+  copiedId,
+}: {
+  text: string;
+  messageId: string;
+  onCopy: (text: string, id: string) => void;
+  copiedId: string | null;
+}) {
+  type Part = { type: 'text'; content: string } | { type: 'code'; lang: string; code: string };
+
+  const parts: Part[] = [];
+  const fence = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = fence.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'code', lang: match[1] || 'text', code: match[2] ?? '' });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) parts.push({ type: 'text', content: text.slice(lastIndex) });
+
+  return (
+    <div className="space-y-2">
+      {parts.map((part, index) => {
+        if (part.type === 'code') {
+          const blockId = `${messageId}-code-${index}`;
+          return (
+            <div
+              key={blockId}
+              className="my-2 overflow-hidden rounded-lg border border-slate-800 bg-slate-900 font-mono text-[11px]"
+            >
+              <div className="flex items-center justify-between border-b border-slate-700/60 bg-slate-800/60 px-3 py-1.5 text-slate-400">
+                <span className="text-[10px] font-bold uppercase text-indigo-300">{part.lang}</span>
+                <button
+                  type="button"
+                  onClick={() => onCopy(part.code, blockId)}
+                  className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white"
+                >
+                  {copiedId === blockId ? (
+                    <Check className="h-3 w-3 text-emerald-400" aria-hidden="true" />
+                  ) : (
+                    <Copy className="h-3 w-3" aria-hidden="true" />
+                  )}
+                  {copiedId === blockId ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <pre className="overflow-x-auto p-3 leading-relaxed text-slate-200">
+                <code>{part.code}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        return (
+          <p key={index} className="whitespace-pre-wrap leading-relaxed">
+            {part.content.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g).map((chunk, chunkIndex) => {
+              if (chunk.startsWith('**') && chunk.endsWith('**')) {
+                return (
+                  <strong key={chunkIndex} className="font-semibold text-cyan-300">
+                    {chunk.slice(2, -2)}
+                  </strong>
+                );
+              }
+              if (chunk.startsWith('`') && chunk.endsWith('`') && chunk.length > 2) {
+                return (
+                  <code key={chunkIndex} className="rounded bg-slate-800 px-1 text-cyan-200">
+                    {chunk.slice(1, -1)}
+                  </code>
+                );
+              }
+              if (chunk.startsWith('_') && chunk.endsWith('_') && chunk.length > 2) {
+                return (
+                  <em key={chunkIndex} className="text-slate-400">
+                    {chunk.slice(1, -1)}
+                  </em>
+                );
+              }
+              return chunk;
+            })}
+          </p>
+        );
+      })}
     </div>
   );
-};
+}
