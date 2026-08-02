@@ -30,8 +30,15 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      # `npm ci` respects the lockfile, so a deploy cannot silently pick up a
+      # different dependency tree than the one CI verified.
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      # Never publish a build that does not typecheck or pass its tests. The
+      # deploy used to run straight from a push with no gate at all.
+      - name: Verify
+        run: npm run check
 
       - name: Setup Pages
         id: pages
@@ -44,6 +51,11 @@ jobs:
           # user pages and project pages alike. base_path is kept as a fallback.
           PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # Optional Cloudflare Worker proxy (see worker/README.md). Set it as a
+          # repository *variable* to make the proxy toggle work in production;
+          # when unset the UI reports the proxy as unavailable rather than
+          # offering a control that cannot work.
+          VITE_PROXY_URL: ${{ vars.VITE_PROXY_URL }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

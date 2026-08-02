@@ -3,11 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Endpointer - Interactive API Directory & REST Playground</title>
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#020617" />
+
+    <title>Endpointer — browser-native API client &amp; public API directory</title>
+    <meta
+      name="description"
+      content="Build, run and share HTTP requests without leaving the browser. 62 continuously verified public APIs, code generation for eight languages, assertions, collections and shareable request links. No account, no telemetry."
+    />
+    <link rel="canonical" href="https://endpointer.opsvibe.systems/" />
+
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./og.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+
+    <!-- Open Graph / Twitter: without these, every shared link renders as a blank card. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Endpointer" />
+    <meta property="og:url" content="https://endpointer.opsvibe.systems/" />
+    <meta property="og:title" content="Endpointer — browser-native API client" />
+    <meta
+      property="og:description"
+      content="Build a request, run it, generate code, assert on the response — then share the whole thing as a single link."
+    />
+    <meta property="og:image" content="https://endpointer.opsvibe.systems/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Endpointer — an API client that runs entirely in your browser" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Endpointer — browser-native API client" />
+    <meta
+      name="twitter:description"
+      content="Build a request, run it, generate code, assert on the response — then share the whole thing as a single link."
+    />
+    <meta name="twitter:image" content="https://endpointer.opsvibe.systems/og.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Endpointer",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any (web browser)",
+        "url": "https://endpointer.opsvibe.systems/",
+        "description": "A browser-native API client with a continuously verified directory of public APIs, code generation, assertions and shareable request links.",
+        "license": "https://github.com/TechLuddite/Endpointer/blob/main/LICENSE",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; padding: 2rem; color: #e2e8f0; background: #020617">
+        Endpointer is an API client that runs entirely in your browser, so it needs JavaScript
+        enabled. The source is at
+        <a style="color: #22d3ee" href="https://github.com/TechLuddite/Endpointer"
+          >github.com/TechLuddite/Endpointer</a
+        >.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

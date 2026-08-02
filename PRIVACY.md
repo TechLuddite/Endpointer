@@ -1,46 +1,109 @@
-# 🔒 Endpointer Privacy Policy
+# 🔒 Endpointer privacy policy
 
-**Effective Date:** August 1, 2026
+**Last updated:** 2 August 2026
 
-Endpointer ("we", "our", or "the app") is committed to protecting your privacy while using our Interactive API Playground & Health Tester platform.
-
----
-
-## 1. Local Storage & Data Retention
-
-- **Browser Storage**: All user preferences, favorited APIs, created request collections, and request execution histories are stored exclusively inside your browser's local storage (`localStorage`).
-- **No Account Required**: Endpointer does not require user registration or account creation.
-- **Data Control**: You can clear your request history and collections at any time directly through the app UI or by clearing your browser site data.
+Endpointer is an API client that runs in your browser. This document describes
+exactly what leaves your machine and what does not. Where a previous version of
+this policy described behaviour the code did not implement, it has been
+corrected — those corrections are noted.
 
 ---
 
-## 2. API Key & Request Safety
+## 1. Local storage
 
-- **Transient Processing**: Any API keys, Bearer tokens, or authentication headers entered in the REST Playground are passed strictly to target endpoints via CORS proxying or direct browser fetch.
-- **No Server Persistence**: We do **not** store, log, or persist your API credentials or request payloads on any server or database.
+Collections, request history, favourites and environment variables are stored
+in your browser's `localStorage` and nowhere else. There is no account system,
+no server-side database, and no sync between devices.
 
----
-
-## 3. Analytics & Telemetry
-
-- Endpointer contains **zero analytics scripts**, zero tracking cookies, and zero user-profiling tools.
+You can delete all of it at any time from **Privacy → Delete local data** in
+the app, or by clearing site data in your browser.
 
 ---
 
-## 4. Third-Party Services & Gemini LLM AI Copilot
+## 2. Where your requests go
 
-- **LLM Processing**: Optional AI Copilot and schema analysis features send user prompt queries and active request context (URL, headers, query params, and response payloads) to Google Gemini LLM API endpoints (`gemini-3.6-flash`).
-- **Stateless Operation**: Endpointer does not log, track, or persist prompt history or AI completions on any database or server storage.
-- **Client Fallback**: If backend LLM endpoints are unconfigured or offline, analysis runs deterministically inside your browser without external transmission.
+**By default, nowhere but the target API.** Requests are issued directly by your
+browser to the endpoint you entered. Endpointer's operators cannot see them.
 
-### ⚠️ Common LLM Concerns & Warnings
+**If you enable the proxy toggle**, the request is relayed by whichever proxy is
+configured for the deployment you are using — the bundled Node server when you
+run Endpointer locally, or a Cloudflare Worker if one is deployed. The proxy
+forwards the request and returns the response. It does not store either. The
+proxy is disabled entirely unless an explicit hostname allowlist is configured,
+and it refuses private, loopback, link-local and cloud-metadata addresses
+unconditionally.
 
-1. **Sensitive Data Protection**: Never include production passwords, secret keys, confidential authorization tokens, or sensitive PII (Personally Identifiable Information) in AI prompts or payload contexts. Sanitize payloads with mock data prior to requesting AI analysis.
-2. **Third-Party Model Processing**: Requests sent to the AI Copilot are processed by external foundation model infrastructure in accordance with standard Gemini API developer guidelines.
-3. **AI Hallucinations & Output Verification**: AI-generated HTTP parameters, TypeScript interfaces, and payload structures are probabilistic. Always review and validate AI-generated configurations before executing them against live production systems.
+The app shows which mode is active; the toggle is disabled when no proxy exists.
 
 ---
 
-## 5. Contact & Support
+## 3. Credentials
 
-If you have questions regarding this Privacy Policy, please reach out via GitHub Issues or contact [opsvibe.systems@gmail.com](mailto:opsvibe.systems@gmail.com).
+Anything you type into the Auth tab — bearer tokens, API keys, basic-auth
+credentials — stays in your browser and is sent only to the target API (or the
+proxy, if you enabled it).
+
+Specifically, credentials are **removed before**:
+
+- **any AI request.** Auth values, `Authorization` and `Cookie` headers,
+  credential-shaped query parameters and URL userinfo are replaced with
+  `[redacted]` before the request reaches the model, and credential fields are
+  stripped from the model's response on the way back. There are automated tests
+  asserting this.
+- **share links.** A link encodes the request shape — method, URL, parameters,
+  non-credential headers, body, assertions — and never a credential value. The
+  recipient supplies their own.
+- **collection exports**, by default. Values declared secret in an environment
+  are swapped for their `{{placeholder}}`, and auth fields are replaced with
+  placeholders regardless. You can opt out of this per export.
+
+> **Correction to a previous version:** an earlier release of Endpointer sent
+> the full auth configuration to the Gemini API on every copilot message, while
+> this document stated credentials were "passed strictly to target endpoints".
+> That was a defect. It is fixed, and covered by tests.
+
+---
+
+## 4. AI features
+
+The AI copilot is **optional and off unless the deployment has a Gemini API key
+configured.** When it is enabled, your prompt, your redacted request
+configuration and the redacted response payload are sent to Google's Gemini API
+for processing. Endpointer does not log or retain prompts or completions.
+
+When AI is **not** configured, the interface says so and uses a local pattern
+matcher instead. That fallback is always visibly labelled as not being a
+language model.
+
+> **Correction to a previous version:** the copilot used to fall back to this
+> local matcher silently while the interface continued to say it was "analyzing
+> with Gemini", and it would answer questions about authentication by inventing
+> a fake bearer token and inserting it into your request. Both are fixed. The
+> offline helper now refuses to produce credentials at all.
+
+### Things to keep in mind
+
+1. **Don't put real secrets in a prompt or request body.** Redaction covers
+   recognised credential fields; it cannot recognise a secret pasted into free
+   text. Use mock data.
+2. **AI output is probabilistic.** Review generated requests, types and
+   assertions before running them against anything that matters.
+3. **Share links are readable by anyone who has them.** They contain no
+   credentials, but they do contain your URL, parameters and body.
+
+---
+
+## 5. Analytics
+
+There are none. No analytics scripts, no tracking cookies, no telemetry, no
+error reporting service, no fingerprinting. The only network requests
+Endpointer makes on its own are for `status.json` (the committed health data)
+and a one-time capability probe of its own server.
+
+---
+
+## 6. Contact
+
+Open an issue at
+[github.com/TechLuddite/Endpointer](https://github.com/TechLuddite/Endpointer/issues),
+or email [opsvibe.systems@gmail.com](mailto:opsvibe.systems@gmail.com).

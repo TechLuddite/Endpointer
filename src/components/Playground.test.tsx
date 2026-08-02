@@ -48,6 +48,7 @@ function renderPlayground(overrides: Partial<Parameters<typeof Playground>[0]> =
     onOpenAiModal: vi.fn(),
     onConfigChange: vi.fn(),
     onNotify: vi.fn(),
+    previousResponse: null,
     ...overrides,
   };
   render(<Playground {...props} />);

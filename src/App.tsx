@@ -109,6 +109,19 @@ export default function App() {
     [environments, activeEnvId],
   );
 
+  /**
+   * The most recent stored response for the request currently open, so the
+   * playground can diff against it. History is already persisted; this just
+   * reads it back.
+   */
+  const previousResponse = useMemo(() => {
+    if (!currentConfig) return null;
+    const key = `${currentConfig.method} ${currentConfig.url}`;
+    return (
+      history.find((item) => `${item.config.method} ${item.config.url}` === key)?.response ?? null
+    );
+  }, [history, currentConfig]);
+
   /* ------------------------- shared request links ------------------------ */
 
   useEffect(() => {
@@ -400,6 +413,7 @@ export default function App() {
             }}
             onConfigChange={setCurrentConfig}
             onNotify={notify}
+            previousResponse={previousResponse}
           />
         )}
 

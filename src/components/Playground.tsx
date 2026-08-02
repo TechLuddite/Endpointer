@@ -40,6 +40,7 @@ import { buildShareUrl, hasUnshareableSecrets } from '../utils/shareLink';
 import { looksLikeCurl, parseCurl } from '../utils/curlParser';
 import { findUnresolvedInConfig, resolveEnvironment } from '../utils/variables';
 import { explainStatus } from '../utils/offlineAssistant';
+import { diffPayloads, formatValue, summarizeDiff } from '../utils/diff';
 import { KeyValueTable } from './KeyValueTable';
 import { JsonViewer, ResponsePreview } from './JsonViewer';
 import { PlaygroundAiChat } from './PlaygroundAiChat';
@@ -56,6 +57,8 @@ interface PlaygroundProps {
   onOpenAiModal: (prompt: string, context: unknown) => void;
   onConfigChange: (config: RequestConfig) => void;
   onNotify: (message: string, tone?: 'info' | 'error') => void;
+  /** Most recent previous response for this exact request, if any. */
+  previousResponse: ApiResponseData | null;
 }
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
@@ -98,7 +101,7 @@ export const DEFAULT_CONFIG: RequestConfig = {
 };
 
 type RequestTab = 'params' | 'headers' | 'auth' | 'body' | 'assertions' | 'code';
-type ResponseTab = 'body' | 'raw' | 'headers' | 'preview' | 'assertions';
+type ResponseTab = 'body' | 'raw' | 'headers' | 'preview' | 'assertions' | 'diff';
 
 export function Playground({
   initialConfig,
@@ -109,6 +112,7 @@ export function Playground({
   onOpenAiModal,
   onConfigChange,
   onNotify,
+  previousResponse,
 }: PlaygroundProps) {
   const [config, setConfig] = useState<RequestConfig>(initialConfig ?? DEFAULT_CONFIG);
   /**
@@ -275,6 +279,15 @@ export function Playground({
 
   const snippet = useMemo(() => generateCodeSnippet(config, codeLang), [config, codeLang]);
   const assertionResults = response?.assertionResults ?? [];
+
+  // Comparing against the last run of the same request is the question people
+  // actually have when an API starts misbehaving: what changed?
+  const diff = useMemo(
+    () =>
+      response && previousResponse ? diffPayloads(previousResponse.data, response.data) : null,
+    [response, previousResponse],
+  );
+  const diffSummary = diff ? summarizeDiff(diff) : null;
   const failedAssertions = assertionResults.filter((r) => !r.passed).length;
   const rawText =
     typeof response?.data === 'string' ? response.data : JSON.stringify(response?.data ?? null);
@@ -603,6 +616,7 @@ export function Playground({
                   ['headers', `Headers (${response ? Object.keys(response.headers).length : 0})`],
                   ['preview', 'Preview'],
                   ['assertions', `Assertions (${assertionResults.length})`],
+                  ['diff', diffSummary ? `Diff · ${diffSummary}` : 'Diff'],
                 ] as Array<[ResponseTab, string]>
               ).map(([id, label]) => (
                 <button
@@ -769,6 +783,61 @@ export function Playground({
                     contentType={response.contentType}
                     url={buildFullUrl(config)}
                   />
+                )}
+
+                {resTab === 'diff' && (
+                  <div className="space-y-2">
+                    {!diff ? (
+                      <p className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-xs leading-relaxed text-slate-500">
+                        Nothing to compare against yet. Send this exact request a second time and
+                        the previous payload becomes the baseline.
+                      </p>
+                    ) : diff.identical ? (
+                      <p className="rounded-xl border border-emerald-900 bg-emerald-950/40 px-4 py-8 text-center text-xs text-emerald-300">
+                        Identical to the previous run.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="font-mono text-[11px] text-slate-400">
+                          {diffSummary} versus the previous run
+                          {diff.truncated && ' — list truncated'}
+                        </p>
+                        <ul className="max-h-[300px] space-y-1 overflow-y-auto">
+                          {diff.changes.map((change, index) => (
+                            <li
+                              key={`${change.path}-${index}`}
+                              className="rounded-lg border border-slate-800 bg-slate-950 p-2 font-mono text-[11px]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <span
+                                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                                    change.kind === 'added'
+                                      ? 'bg-emerald-950 text-emerald-400'
+                                      : change.kind === 'removed'
+                                        ? 'bg-rose-950 text-rose-400'
+                                        : 'bg-amber-950 text-amber-400'
+                                  }`}
+                                >
+                                  {change.kind}
+                                </span>
+                                <span className="truncate text-cyan-300">{change.path}</span>
+                              </span>
+                              {change.kind !== 'added' && (
+                                <span className="mt-1 block text-rose-300">
+                                  − {formatValue(change.before)}
+                                </span>
+                              )}
+                              {change.kind !== 'removed' && (
+                                <span className="block text-emerald-300">
+                                  + {formatValue(change.after)}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
                 )}
 
                 {resTab === 'assertions' && (

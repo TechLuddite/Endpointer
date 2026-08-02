@@ -1,82 +1,149 @@
 # ⚡ Endpointer
 
-> **Interactive API Playground, Real-Time Health Tester & AI Schema Assistant**
+> **A browser-native API client, with a public API directory that verifies itself.**
 
-Endpointer is a developer platform designed for testing, exploring, and building REST & HTTP API workflows. It combines a curated directory of 65+ public APIs, an interactive REST playground with AI context-driven configuration, zero-CORS proxying, real-time health pings, and collection management.
+[![CI](https://github.com/TechLuddite/Endpointer/actions/workflows/ci.yml/badge.svg)](https://github.com/TechLuddite/Endpointer/actions/workflows/ci.yml)
+[![Health check](https://github.com/TechLuddite/Endpointer/actions/workflows/health-check.yml/badge.svg)](https://github.com/TechLuddite/Endpointer/actions/workflows/health-check.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-![Endpointer App Preview](https://raw.githubusercontent.com/TechLuddite/Endpointer/main/docs/preview.png)
+**Live:** [endpointer.opsvibe.systems](https://endpointer.opsvibe.systems)
 
----
-
-## ✨ Features
-
-- 🛠️ **REST Playground**: Interactive request builder with support for custom HTTP methods, headers, URL params, bearer tokens, basic auth, and body payloads.
-- 🤖 **AI Playground Assistant**: Context-aware Gemini 3.6 Flash copilot embedded in the playground that drives API configs, creates queries (e.g. Pokédex queries), generates TypeScript interfaces, and explains HTTP errors.
-- 🌐 **Zero-CORS Proxy Engine**: Built-in Express reverse proxy engine that bypasses browser CORS restrictions cleanly.
-- 📚 **Curated Public API Directory**: Browse 65+ verified public APIs categorized by Weather, Crypto, Finance, AI, Development, Gaming, Science, and Entertainment.
-- ⏱️ **Real-Time Health Monitor**: Live batch pings with latency measurement (ms), HTTP status verification, and failure detection.
-- 💻 **Multi-Language Code Generator**: Instantly export requests to `fetch()`, `axios`, `cURL`, `Python (requests)`, `Node.js`, `Go`, `Rust`, and `PHP`.
-- 📁 **Collections & History**: Save request presets, organize collections, and track request history stored in client-side storage.
-- 🔒 **Privacy First & Local Storage**: No telemetry, no backend tracking of API keys or user data.
+Build a request, run it, generate code for it in eight languages, assert on the
+response — then share the whole thing as a single link. No account, no install,
+no server required.
 
 ---
 
-## 🚀 Quick Start
+## ✨ What it does
 
-### Prerequisites
-- **Node.js**: v18+ or v20+
-- **npm**: v9+
+- 🛠️ **Request builder** — methods, query params, headers, bearer/basic/API-key
+  auth, JSON and raw bodies. The URL bar and the params table are one source of
+  truth kept in sync both ways, so unticking a parameter actually removes it.
+- 🔗 **Shareable request links** — every request encodes into its own URL. Paste
+  it into a bug report and the other person gets your exact setup. Credentials
+  are deliberately excluded.
+- 📋 **Paste a `curl` command** and it becomes an editable request — including
+  anything you copied from browser devtools. Also imports Postman v2.1
+  collections, OpenAPI 3 documents and HAR captures.
+- ✅ **Assertions & a collection runner** — attach checks to a request (status,
+  latency, headers, JSONPath), run a whole collection, get a pass/fail report.
+  Assertions can be derived from a real response with one click.
+- 🌐 **Environments & variables** — `{{baseUrl}}`, `{{token}}`, resolvable
+  through each other. Values marked secret are swapped for placeholders on
+  export.
+- 📚 **62 public APIs, re-verified daily** — a scheduled job probes every entry
+  for reachability *and* browser (CORS) usability, and commits the results.
+- 📊 **Health board** — real uptime, p50/p95 latency and a 90-day sparkline from
+  those scheduled runs, rendered on first paint with zero client-side requests.
+- 💻 **Code generation** — `fetch`, `axios`, `cURL`, Python, Node, Go, Rust, PHP.
+- 🔍 **Response inspector** — collapsible JSON tree, JSONPath filtering, image
+  and HTML preview, and a structural diff against the previous run of the same
+  request.
+- 🤖 **Optional AI copilot** — builds requests, generates TypeScript/Zod/Python
+  types from your *actual* response, and explains errors from the real body.
+  Needs a Gemini API key; when there isn't one the UI says so plainly and falls
+  back to a clearly-labelled offline helper. It never presents non-AI output
+  as AI, and it will not invent a credential.
+- ⌨️ **Keyboard-first** — `⌘/Ctrl+Enter` sends, `⌘/Ctrl+K` opens the palette,
+  `Esc` closes dialogs.
 
-### Installation
+---
 
-1. Clone the repository:
+## 🚀 Quick start
+
+Requires **Node.js 20+**.
+
 ```bash
 git clone https://github.com/TechLuddite/Endpointer.git
 cd Endpointer
-```
-
-2. Install dependencies:
-```bash
 npm install
+npm run dev          # http://localhost:3000
 ```
 
-3. Set up environment variables in `.env`:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
+No environment variables needed. To enable the optional server-backed features,
+copy `.env.example` to `.env`:
 
-4. Launch development server:
+| Variable | Enables |
+| --- | --- |
+| `GEMINI_API_KEY` | The AI copilot. Without it, `/api/ai-*` return 503 and the UI reports "AI offline". |
+| `PROXY_ALLOWED_HOSTS` | The CORS proxy, for the hosts you list. **Empty disables it** — it does not default to open. |
+| `VITE_PROXY_URL` | Points the static build at a deployed [Worker proxy](./worker/README.md). |
+
 ```bash
-npm run dev
+npm run check         # typecheck + lint + 231 tests
+npm run build:static  # static bundle for any static host
+npm run build         # static bundle + the Node server
 ```
-Open `http://localhost:3000` in your browser.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## 🌐 About CORS (read this before filing a bug)
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Lucide React Icons
-- **Backend Server**: Node.js, Express, `tsx` / `esbuild`
-- **AI Engine**: `@google/genai` (Gemini 3.6 Flash)
-- **Proxy**: Node `axios` / `fetch` proxy middleware for CORS bypassing
+Endpointer runs in your browser, so it is bound by the same-origin policy. If a
+target API does not send `Access-Control-Allow-Origin`, **the browser** blocks
+the response. No client-side tool can work around that.
+
+Endpointer is explicit about it rather than pretending otherwise:
+
+- Every directory entry carries a **verified** badge refreshed daily by
+  [`health-check.yml`](.github/workflows/health-check.yml) — 🟢 browser-ready,
+  🟡 needs a proxy, 🔴 unreachable — and you can filter to browser-ready only.
+- Failures distinguish CORS from DNS failure, timeout, TLS error and offline,
+  instead of labelling everything "CORS".
+- For the 🟡 cases: run `npm run dev` locally (the bundled server proxies for
+  you), deploy the included [Cloudflare Worker](./worker/README.md) and set
+  `VITE_PROXY_URL`, or copy the generated cURL snippet and run it outside the
+  browser.
+
+The proxy toggle is disabled, with an explanation, when no proxy exists on the
+deployment you are using.
 
 ---
 
-## 🛡️ Privacy & Security
+## 🏗️ Architecture
 
-Endpointer prioritizes developer privacy:
-- All request collections and request histories are stored strictly in your browser's `localStorage`.
-- API keys entered in the Playground are transient and never saved to any external database.
-- Read our full [Privacy Policy](./PRIVACY.md) for details.
+| Layer | Stack |
+| --- | --- |
+| Frontend | React 19, TypeScript (strict), Tailwind CSS v4, Vite 8, lucide-react |
+| Optional server | Node + Express — CORS proxy and Gemini endpoints |
+| Optional edge proxy | Cloudflare Worker with a hostname allowlist (`worker/`) |
+| Optional AI | `@google/genai`, Gemini 3.6 Flash |
+| Data pipeline | GitHub Actions cron → `public/status.json` |
+| Tests | Vitest + Testing Library |
+
+Persistence is `localStorage` only, behind a validated, versioned schema with a
+migration. No backend database, no accounts.
 
 ---
 
-## 💖 Support the Developer
+## 🛡️ Security & privacy
 
-If Endpointer helps your daily API development workflow, consider supporting project maintenance and server infrastructure! Click **Dev Support** in the app footer or visit [GitHub Sponsors](https://github.com/sponsors).
+- The bundled proxy refuses any host outside `PROXY_ALLOWED_HOSTS`, and refuses
+  private, loopback, link-local, CGNAT and cloud-metadata addresses
+  unconditionally — checked at connect time, so DNS rebinding does not slip
+  past, and re-checked on every redirect hop.
+- Credentials are **redacted before any AI request leaves your machine**, and
+  stripped from model output on the way back. There are tests asserting this.
+- Share links and collection exports exclude credentials by default.
+- Per-IP rate limiting on the proxy, batch ping and AI endpoints.
+- No analytics, no tracking cookies, no telemetry.
+
+Details in [PRIVACY.md](./PRIVACY.md). Report vulnerabilities via
+[GitHub issues](https://github.com/TechLuddite/Endpointer/issues).
 
 ---
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Adding an API to the directory is a
+single object in `src/data/publicApis.ts` — the scheduled check verifies it and
+opens an issue if it later breaks.
+
+## 💖 Support
+
+Endpointer is free and MIT-licensed, with no paid tier. The **Support** button
+in the footer has ways to say thanks; starring the repository helps most.
 
 ## 📄 License
 
-This project is open-source under the MIT License.
+[MIT](./LICENSE) © TechLuddite
