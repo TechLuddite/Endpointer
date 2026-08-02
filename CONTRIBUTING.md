@@ -27,6 +27,18 @@ npm run check    # typecheck + lint + tests — run this before opening a PR
 
 ---
 
+## Before you start
+
+Two documents are worth reading once:
+
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — where things live and which
+  invariants are load-bearing.
+- [`docs/LESSONS-FROM-AI-STUDIO.md`](./docs/LESSONS-FROM-AI-STUDIO.md) — the
+  defects in the AI-generated first version. Most of the house rules below are
+  there because of something in that document.
+
+---
+
 ## House rules
 
 **Strict TypeScript, actually enforced.** `strict`, `noUnusedLocals` and
