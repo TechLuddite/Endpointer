@@ -97,7 +97,8 @@ Endpointer is explicit about it rather than pretending otherwise:
   browser.
 
 The proxy toggle is disabled, with an explanation, when no proxy exists on the
-deployment you are using.
+deployment you are using. Deploying the Worker for the hosted site is
+[the top backlog item](./docs/BACKLOG.md).
 
 ---
 
@@ -133,6 +134,17 @@ Details in [PRIVACY.md](./PRIVACY.md). Report vulnerabilities via
 [GitHub issues](https://github.com/TechLuddite/Endpointer/issues).
 
 ---
+
+## 📖 Documentation
+
+| Document | What's in it |
+| --- | --- |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | How it fits together, and the invariants worth not breaking |
+| [`docs/LESSONS-FROM-AI-STUDIO.md`](./docs/LESSONS-FROM-AI-STUDIO.md) | What the AI-generated first version got wrong, and how to catch it next time |
+| [`docs/BACKLOG.md`](./docs/BACKLOG.md) | Deferred work, with enough context to pick up cold |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | House rules, and how to add an API |
+| [`worker/README.md`](./worker/README.md) | The optional edge proxy |
+| [`PRIVACY.md`](./PRIVACY.md) | What leaves your machine |
 
 ## 🤝 Contributing
 
