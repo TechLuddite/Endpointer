@@ -17,7 +17,13 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { PUBLIC_APIS } from '../src/data/publicApis.js';
-import type { CorsSupport, StatusFile, StatusEntry, StatusSample } from '../src/types.js';
+import type {
+  CorsSupport,
+  PublicApiItem,
+  StatusEntry,
+  StatusFile,
+  StatusSample,
+} from '../src/types.js';
 
 const STATUS_PATH = path.join(process.cwd(), 'public', 'status.json');
 const HISTORY_LIMIT = 90; // ~3 months of daily samples
@@ -62,18 +68,28 @@ function classifyOutcome(status: number, requiresAuth: boolean) {
   return { ok: reachable || authWall, needsCredentials: authWall };
 }
 
-async function probe(url: string, requiresAuth: boolean): Promise<ProbeResult> {
+/**
+ * Probe an entry exactly as the app would send it.
+ *
+ * `defaultHeaders` has to be included: an entry that needs a documented header
+ * to work (ReqRes requires `x-api-key`) would otherwise be probed in a
+ * configuration the app never uses, and reported as broken while working fine
+ * for every actual user.
+ */
+async function probe(api: PublicApiItem): Promise<ProbeResult> {
   const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const requiresAuth = api.auth !== 'No Auth';
 
   try {
-    const res = await fetch(url, {
+    const res = await fetch(api.sampleEndpoint, {
       method: 'GET',
       headers: {
         Origin: PROBE_ORIGIN,
         'User-Agent': 'Endpointer-HealthCheck/1.0 (+https://github.com/TechLuddite/Endpointer)',
         Accept: 'application/json, text/plain, */*',
+        ...Object.fromEntries((api.defaultHeaders ?? []).map((h) => [h.key, h.value])),
       },
       signal: controller.signal,
       redirect: 'follow',
@@ -130,7 +146,7 @@ async function main() {
       const api = PUBLIC_APIS[index];
       if (!api) continue;
 
-      const result = await probe(api.sampleEndpoint, api.auth !== 'No Auth');
+      const result = await probe(api);
       const prior = previousById.get(api.id);
 
       const sample: StatusSample = {
