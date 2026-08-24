@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-23T07:03:47.249Z",
+  "generatedAt": "2026-08-24T07:30:38.271Z",
   "summary": {
     "total": 58,
-    "healthy": 54,
-    "failing": 4,
-    "browserUsable": 51,
-    "needsProxy": 4,
+    "healthy": 55,
+    "failing": 3,
+    "browserUsable": 54,
+    "needsProxy": 2,
     "needsCredentials": 1
   },
   "entries": [
@@ -16,14 +16,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 649,
+      "latency": 503,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 525,
       "p95Latency": 717,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -174,6 +174,12 @@
           "ok": true,
           "status": 200,
           "latency": 649
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 503
         }
       ]
     },
@@ -183,14 +189,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 588,
+      "latency": 562,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 521,
+      "p50Latency": 562,
       "p95Latency": 960,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -341,6 +347,12 @@
           "ok": true,
           "status": 200,
           "latency": 588
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 562
         }
       ]
     },
@@ -350,14 +362,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 297,
+      "latency": 311,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 297,
+      "p50Latency": 311,
       "p95Latency": 432,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -508,6 +520,12 @@
           "ok": true,
           "status": 200,
           "latency": 297
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 311
         }
       ]
     },
@@ -517,14 +535,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 255,
+      "latency": 138,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 255,
       "p95Latency": 533,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -675,6 +693,12 @@
           "ok": true,
           "status": 200,
           "latency": 255
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 138
         }
       ]
     },
@@ -684,14 +708,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 519,
+      "latency": 193,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 296,
       "p95Latency": 519,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -842,6 +866,12 @@
           "ok": true,
           "status": 200,
           "latency": 519
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 193
         }
       ]
     },
@@ -851,14 +881,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 790,
+      "latency": 481,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 80,
-      "p50Latency": 703,
-      "p95Latency": 8576,
-      "samples": 25,
+      "uptimePercent": 80.8,
+      "p50Latency": 667,
+      "p95Latency": 1079,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -1009,6 +1039,12 @@
           "ok": true,
           "status": 200,
           "latency": 790
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 481
         }
       ]
     },
@@ -1018,14 +1054,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 192,
+      "latency": 144,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 185,
       "p95Latency": 265,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -1176,6 +1212,12 @@
           "ok": true,
           "status": 200,
           "latency": 192
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 144
         }
       ]
     },
@@ -1185,14 +1227,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 455,
+      "latency": 384,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 96,
-      "p50Latency": 446,
+      "uptimePercent": 96.2,
+      "p50Latency": 433,
       "p95Latency": 672,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -1343,6 +1385,12 @@
           "ok": true,
           "status": 200,
           "latency": 455
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 384
         }
       ]
     },
@@ -1352,14 +1400,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 170,
+      "latency": 140,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 96,
-      "p50Latency": 147,
+      "uptimePercent": 96.2,
+      "p50Latency": 145,
       "p95Latency": 387,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -1510,6 +1558,12 @@
           "ok": true,
           "status": 200,
           "latency": 170
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 140
         }
       ]
     },
@@ -1519,14 +1573,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 153,
+      "latency": 38,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 79,
       "p95Latency": 333,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -1677,6 +1731,12 @@
           "ok": true,
           "status": 200,
           "latency": 153
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 38
         }
       ]
     },
@@ -1686,14 +1746,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 307,
+      "latency": 58,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 205,
       "p95Latency": 308,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -1844,6 +1904,12 @@
           "ok": true,
           "status": 200,
           "latency": 307
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 58
         }
       ]
     },
@@ -1853,14 +1919,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 313,
+      "latency": 46,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 157,
       "p95Latency": 291,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -2011,6 +2077,12 @@
           "ok": true,
           "status": 200,
           "latency": 313
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 46
         }
       ]
     },
@@ -2020,14 +2092,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 4348,
+      "latency": 707,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 24,
-      "p50Latency": 3394,
+      "uptimePercent": 26.9,
+      "p50Latency": 1614,
       "p95Latency": 9340,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -2178,6 +2250,12 @@
           "ok": true,
           "status": 200,
           "latency": 4348
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 707
         }
       ]
     },
@@ -2187,14 +2265,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 780,
+      "latency": 73,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 530,
       "p95Latency": 788,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -2345,6 +2423,12 @@
           "ok": true,
           "status": 200,
           "latency": 780
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 73
         }
       ]
     },
@@ -2354,14 +2438,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 186,
+      "latency": 79,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 140,
       "p95Latency": 392,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -2512,6 +2596,12 @@
           "ok": true,
           "status": 200,
           "latency": 186
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 79
         }
       ]
     },
@@ -2521,14 +2611,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 395,
+      "latency": 253,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 359,
       "p95Latency": 674,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -2679,6 +2769,12 @@
           "ok": true,
           "status": 200,
           "latency": 395
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 253
         }
       ]
     },
@@ -2688,14 +2784,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 609,
+      "latency": 250,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 392,
       "p95Latency": 639,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -2846,6 +2942,12 @@
           "ok": true,
           "status": 200,
           "latency": 609
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 250
         }
       ]
     },
@@ -2855,14 +2957,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 655,
+      "latency": 394,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 425,
       "p95Latency": 747,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -3013,6 +3115,12 @@
           "ok": true,
           "status": 200,
           "latency": 655
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 394
         }
       ]
     },
@@ -3022,14 +3130,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 568,
+      "latency": 166,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 290,
       "p95Latency": 568,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -3180,6 +3288,12 @@
           "ok": true,
           "status": 200,
           "latency": 568
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 166
         }
       ]
     },
@@ -3189,14 +3303,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 354,
+      "latency": 291,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 243,
+      "p50Latency": 246,
       "p95Latency": 416,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -3347,6 +3461,12 @@
           "ok": true,
           "status": 200,
           "latency": 354
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 291
         }
       ]
     },
@@ -3356,14 +3476,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 282,
+      "latency": 519,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 84,
-      "p50Latency": 491,
+      "uptimePercent": 84.6,
+      "p50Latency": 497,
       "p95Latency": 2591,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -3514,6 +3634,12 @@
           "ok": true,
           "status": 200,
           "latency": 282
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 519
         }
       ]
     },
@@ -3523,14 +3649,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 242,
-      "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "latency": 247,
+      "cors": "yes",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 226,
+      "p50Latency": 237,
       "p95Latency": 350,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -3681,6 +3807,12 @@
           "ok": true,
           "status": 200,
           "latency": 242
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 247
         }
       ]
     },
@@ -3690,14 +3822,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 235,
-      "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "latency": 232,
+      "cors": "yes",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 168,
+      "p50Latency": 179,
       "p95Latency": 299,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -3848,6 +3980,12 @@
           "ok": true,
           "status": 200,
           "latency": 235
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 232
         }
       ]
     },
@@ -3857,14 +3995,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 1952,
+      "latency": 1879,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 1826,
+      "p50Latency": 1829,
       "p95Latency": 2119,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -4015,6 +4153,12 @@
           "ok": true,
           "status": 200,
           "latency": 1952
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 1879
         }
       ]
     },
@@ -4024,14 +4168,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 186,
+      "latency": 245,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 96,
+      "uptimePercent": 96.2,
       "p50Latency": 186,
       "p95Latency": 681,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -4182,6 +4326,12 @@
           "ok": true,
           "status": 200,
           "latency": 186
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 245
         }
       ]
     },
@@ -4191,14 +4341,14 @@
       "ok": false,
       "needsCredentials": false,
       "status": 525,
-      "latency": 416,
+      "latency": 90,
       "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
-      "consecutiveFailures": 25,
+      "checkedAt": "2026-08-24T07:30:38.271Z",
+      "consecutiveFailures": 26,
       "uptimePercent": 0,
       "p50Latency": 0,
       "p95Latency": 0,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -4349,6 +4499,12 @@
           "ok": false,
           "status": 525,
           "latency": 416
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": false,
+          "status": 525,
+          "latency": 90
         }
       ]
     },
@@ -4358,14 +4514,14 @@
       "ok": false,
       "needsCredentials": false,
       "status": 525,
-      "latency": 413,
+      "latency": 84,
       "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
-      "consecutiveFailures": 25,
+      "checkedAt": "2026-08-24T07:30:38.271Z",
+      "consecutiveFailures": 26,
       "uptimePercent": 0,
       "p50Latency": 0,
       "p95Latency": 0,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -4516,6 +4672,12 @@
           "ok": false,
           "status": 525,
           "latency": 413
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": false,
+          "status": 525,
+          "latency": 84
         }
       ]
     },
@@ -4525,14 +4687,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 178,
+      "latency": 66,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 112,
       "p95Latency": 652,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -4683,6 +4845,12 @@
           "ok": true,
           "status": 200,
           "latency": 178
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 66
         }
       ]
     },
@@ -4692,14 +4860,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 281,
+      "latency": 338,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 122,
+      "p50Latency": 138,
       "p95Latency": 381,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -4850,6 +5018,12 @@
           "ok": true,
           "status": 200,
           "latency": 281
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 338
         }
       ]
     },
@@ -4859,14 +5033,14 @@
       "ok": false,
       "needsCredentials": false,
       "status": 504,
-      "latency": 520,
+      "latency": 835,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
-      "consecutiveFailures": 25,
+      "checkedAt": "2026-08-24T07:30:38.271Z",
+      "consecutiveFailures": 26,
       "uptimePercent": 0,
       "p50Latency": 0,
       "p95Latency": 0,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -5017,6 +5191,12 @@
           "ok": false,
           "status": 504,
           "latency": 520
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": false,
+          "status": 504,
+          "latency": 835
         }
       ]
     },
@@ -5026,14 +5206,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 192,
+      "latency": 155,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 169,
       "p95Latency": 357,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -5184,6 +5364,12 @@
           "ok": true,
           "status": 200,
           "latency": 192
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 155
         }
       ]
     },
@@ -5193,14 +5379,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 273,
+      "latency": 204,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 259,
       "p95Latency": 453,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -5351,6 +5537,12 @@
           "ok": true,
           "status": 200,
           "latency": 273
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 204
         }
       ]
     },
@@ -5360,14 +5552,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 660,
+      "latency": 641,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 583,
+      "p50Latency": 597,
       "p95Latency": 2061,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -5518,6 +5710,12 @@
           "ok": true,
           "status": 200,
           "latency": 660
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 641
         }
       ]
     },
@@ -5527,14 +5725,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 483,
+      "latency": 498,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 454,
+      "p50Latency": 470,
       "p95Latency": 533,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -5685,6 +5883,12 @@
           "ok": true,
           "status": 200,
           "latency": 483
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 498
         }
       ]
     },
@@ -5694,14 +5898,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 451,
+      "latency": 262,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 360,
       "p95Latency": 537,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -5852,6 +6056,12 @@
           "ok": true,
           "status": 200,
           "latency": 451
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 262
         }
       ]
     },
@@ -5861,14 +6071,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 1382,
+      "latency": 322,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 305,
+      "p50Latency": 322,
       "p95Latency": 558,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -6019,6 +6229,12 @@
           "ok": true,
           "status": 200,
           "latency": 1382
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 322
         }
       ]
     },
@@ -6028,14 +6244,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 173,
+      "latency": 63,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 236,
       "p95Latency": 611,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -6186,6 +6402,12 @@
           "ok": true,
           "status": 200,
           "latency": 173
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 63
         }
       ]
     },
@@ -6195,14 +6417,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 236,
+      "latency": 261,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 167,
+      "p50Latency": 172,
       "p95Latency": 301,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -6353,6 +6575,12 @@
           "ok": true,
           "status": 200,
           "latency": 236
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 261
         }
       ]
     },
@@ -6362,14 +6590,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 207,
+      "latency": 180,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 210,
       "p95Latency": 370,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -6520,6 +6748,12 @@
           "ok": true,
           "status": 200,
           "latency": 207
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 180
         }
       ]
     },
@@ -6529,14 +6763,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 299,
+      "latency": 42,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 108,
       "p95Latency": 320,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -6687,6 +6921,12 @@
           "ok": true,
           "status": 200,
           "latency": 299
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 42
         }
       ]
     },
@@ -6696,14 +6936,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 585,
+      "latency": 382,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 96,
-      "p50Latency": 1991,
+      "uptimePercent": 96.2,
+      "p50Latency": 990,
       "p95Latency": 5110,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -6854,6 +7094,12 @@
           "ok": true,
           "status": 200,
           "latency": 585
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 382
         }
       ]
     },
@@ -6863,14 +7109,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 120,
+      "latency": 188,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 121,
+      "p50Latency": 135,
       "p95Latency": 302,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -7021,6 +7267,12 @@
           "ok": true,
           "status": 200,
           "latency": 120
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 188
         }
       ]
     },
@@ -7030,14 +7282,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 1872,
+      "latency": 234,
       "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 96,
-      "p50Latency": 338,
+      "uptimePercent": 96.2,
+      "p50Latency": 313,
       "p95Latency": 3969,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -7188,6 +7440,12 @@
           "ok": true,
           "status": 200,
           "latency": 1872
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 234
         }
       ]
     },
@@ -7197,14 +7455,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 1164,
+      "latency": 2530,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 547,
-      "p95Latency": 1164,
-      "samples": 25,
+      "p50Latency": 553,
+      "p95Latency": 2515,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -7355,6 +7613,12 @@
           "ok": true,
           "status": 200,
           "latency": 1164
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 2530
         }
       ]
     },
@@ -7364,14 +7628,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 747,
+      "latency": 1073,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 195,
-      "p95Latency": 425,
-      "samples": 25,
+      "p50Latency": 198,
+      "p95Latency": 747,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -7522,23 +7786,29 @@
           "ok": true,
           "status": 200,
           "latency": 747
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 1073
         }
       ]
     },
     {
       "id": "dictionary-api",
       "url": "https://api.dictionaryapi.dev/api/v2/entries/en/developer",
-      "ok": false,
+      "ok": true,
       "needsCredentials": false,
-      "status": 502,
-      "latency": 377,
-      "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
-      "consecutiveFailures": 1,
-      "uptimePercent": 60,
-      "p50Latency": 170,
+      "status": 200,
+      "latency": 229,
+      "cors": "yes",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
+      "consecutiveFailures": 0,
+      "uptimePercent": 61.5,
+      "p50Latency": 174,
       "p95Latency": 410,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -7689,6 +7959,12 @@
           "ok": false,
           "status": 502,
           "latency": 377
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 229
         }
       ]
     },
@@ -7698,14 +7974,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 193,
+      "latency": 206,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 147,
-      "p95Latency": 193,
-      "samples": 25,
+      "p95Latency": 206,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -7856,6 +8132,12 @@
           "ok": true,
           "status": 200,
           "latency": 193
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 206
         }
       ]
     },
@@ -7865,14 +8147,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 145,
+      "latency": 140,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 145,
       "p95Latency": 235,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -8023,6 +8305,12 @@
           "ok": true,
           "status": 200,
           "latency": 145
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 140
         }
       ]
     },
@@ -8032,14 +8320,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 99,
+      "latency": 86,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 69,
+      "p50Latency": 71,
       "p95Latency": 199,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -8190,6 +8478,12 @@
           "ok": true,
           "status": 200,
           "latency": 99
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 86
         }
       ]
     },
@@ -8199,14 +8493,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 1019,
+      "latency": 563,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 923,
       "p95Latency": 1295,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -8357,6 +8651,12 @@
           "ok": true,
           "status": 200,
           "latency": 1019
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 563
         }
       ]
     },
@@ -8366,14 +8666,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 279,
+      "latency": 515,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 279,
+      "p50Latency": 300,
       "p95Latency": 743,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -8524,6 +8824,12 @@
           "ok": true,
           "status": 200,
           "latency": 279
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 515
         }
       ]
     },
@@ -8533,14 +8839,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 379,
+      "latency": 492,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 347,
+      "p50Latency": 350,
       "p95Latency": 591,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -8691,6 +8997,12 @@
           "ok": true,
           "status": 200,
           "latency": 379
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 492
         }
       ]
     },
@@ -8700,14 +9012,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 725,
+      "latency": 472,
       "cors": "no",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 629,
       "p95Latency": 773,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -8858,6 +9170,12 @@
           "ok": true,
           "status": 200,
           "latency": 725
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 472
         }
       ]
     },
@@ -8867,14 +9185,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 240,
+      "latency": 414,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 92,
+      "uptimePercent": 92.3,
       "p50Latency": 633,
       "p95Latency": 1750,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -9025,6 +9343,12 @@
           "ok": true,
           "status": 200,
           "latency": 240
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 414
         }
       ]
     },
@@ -9034,14 +9358,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 458,
+      "latency": 250,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 88,
-      "p50Latency": 458,
+      "uptimePercent": 88.5,
+      "p50Latency": 434,
       "p95Latency": 1131,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -9192,6 +9516,12 @@
           "ok": true,
           "status": 200,
           "latency": 458
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 250
         }
       ]
     },
@@ -9201,14 +9531,14 @@
       "ok": true,
       "needsCredentials": true,
       "status": 401,
-      "latency": 252,
+      "latency": 241,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
-      "uptimePercent": 96,
-      "p50Latency": 267,
+      "uptimePercent": 96.2,
+      "p50Latency": 258,
       "p95Latency": 2138,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -9359,6 +9689,12 @@
           "ok": true,
           "status": 401,
           "latency": 252
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 401,
+          "latency": 241
         }
       ]
     },
@@ -9368,14 +9704,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 162,
+      "latency": 179,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
-      "p50Latency": 94,
+      "p50Latency": 102,
       "p95Latency": 204,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -9526,6 +9862,12 @@
           "ok": true,
           "status": 200,
           "latency": 162
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 179
         }
       ]
     },
@@ -9535,14 +9877,14 @@
       "ok": true,
       "needsCredentials": false,
       "status": 200,
-      "latency": 139,
+      "latency": 194,
       "cors": "yes",
-      "checkedAt": "2026-08-23T07:03:47.249Z",
+      "checkedAt": "2026-08-24T07:30:38.271Z",
       "consecutiveFailures": 0,
       "uptimePercent": 100,
       "p50Latency": 201,
       "p95Latency": 315,
-      "samples": 25,
+      "samples": 26,
       "history": [
         {
           "t": "2026-08-02T06:54:51.444Z",
@@ -9693,6 +10035,12 @@
           "ok": true,
           "status": 200,
           "latency": 139
+        },
+        {
+          "t": "2026-08-24T07:30:38.271Z",
+          "ok": true,
+          "status": 200,
+          "latency": 194
         }
       ]
     }
